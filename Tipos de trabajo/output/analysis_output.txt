@@ -1,0 +1,209 @@
+--- TIPO DE TRABAJO: C ---
+Total registros: 14
+
+Top 5 Causa visita:
+Causa visita
+Capacitación etwe                                           2
+Informe de avance sobre los trabajos R.E-31 we2025-01166    1
+Trabajos administrativo                                     1
+Soporte terreno y cambio de sondas                          1
+Solución flowcell                                           1
+
+Sample Resolución visita (5):
+- Se realiza avance de informe de terreno que proporciona la información sobre los trabajos que se han ejecutado en terreno.
+- Se estuvo trabajando en el informe que proporciona los trabajos realizados en terreno 
+- En primera instancia, a solicitud de cliente, se entrega motobomba 4” a personal de Agromonte.
+
+A continuación, cliente solicita apoyo a empresa MIES para utilizar cachimba Relevadora, en el cual, supervisor de la empresa indica que no tienen usuarios registrados. se coordina con personal de A&H para realizar usuarios para que puedan utilizar cachimba, tanto Relevadora como El Cobre, se agregan usuarios conformemente y se informa a cliente de dicho movimiento. Usuarios operan correctamente.
+- Se realiza capacitacion a operadores y administrativo de ssr los almendros 
+- Se crea solución momentánea flowcell, para los recintos PBM4 y P6. 
+
+Sample Observaciones (5):
+
+========================================
+
+--- TIPO DE TRABAJO: G ---
+Total registros: 3
+
+Top 5 Causa visita:
+Causa visita
+Instalación de monitor, cable y configuración de sala de control    1
+Retiro de pantalla de sala de control producto de falla             1
+Mantenimiento preventivo                                            1
+
+Sample Resolución visita (5):
+- Se instala pantalla y se configura el monitos, queda pendiente la instalación del último monitor 
+- Se retiran equipos en falla de la sala de control y no se deja pantallas backup debido a que el computador de la sala no permite mas conexión de pantallas mediante HDMI
+- Se realiza entrega de caudalimetro mecánico a señor Diego Ramos de la empresa SS para su instalación y posterior configuración por parte de We-Techs 
+
+Sample Observaciones (5):
+
+========================================
+
+--- TIPO DE TRABAJO: I ---
+Total registros: 91
+
+Top 5 Causa visita:
+Causa visita
+Instalación, conexión, instalación de telemetría                 6
+Conexión y configuración                                         5
+Integración de sondas y soluciones flowcell                      5
+Instalación, conexión y configuración.                           4
+Entrega de materiales \nConexión de los puntos trasladados \n    3
+
+Sample Resolución visita (5):
+- Tambien se realizó inventario en bodega AALT, así quedando documentado la cantidad de equipos nuevos con su correspondiente numero serial.
+- Se genera el cambio del cambie de la sonda multiparametrica, debido a que la sonda existente tenía problemas para poder generar la comunicación entre la sonda multiparametrica hacia el conector sdi-12.
+- Se realizó la instalación de los elementos pendientes para habilitar la integración de la sonda multiparamétrica, incluyendo el equipo Sutron, el cable SDI-12 para la comunicación mediante RS-485 y el cableado de 100 metros que conecta con la sonda.
+
+Posteriormente, se efectuó la configuración de las variables a monitorear en los equipos Sutron y uc300: temperatura, pH, conductividad, nivel y turbidez.
+
+Finalmente, se verificaron en terreno las lecturas obtenidas desde la plataforma, confirmando que el punto quedó completamente integrado y operativo
+- Se genera el cambio de la sonda multiparametrica debido a que la sonda existente se encontraba con problemas de medición de la variable de conductividad.
+- Queda pendiente integrar la variable de nivel 
+
+Sample Observaciones (5):
+- Se realizo el cambio de la sonda multiparametrica actual por una nueva, quedando operativa y en funcionamiento 
+- .
+- Se encuentra instalado solo falta configurar la variable de nivel instalada 
+- …
+- Recinto con transmisión de datos operativo.
+
+========================================
+
+--- TIPO DE TRABAJO: LT ---
+Total registros: 45
+
+Top 5 Causa visita:
+Causa visita
+Levantamiento terreno y coordinacion de futuros trabajos Mantos Blancos                    6
+Registro de instrumentación AAES GH                                                        6
+Revicion de cables sonda multiparametrica                                                  5
+-Desconexión punto Resolución 31.\n-Instalación y configuración sonda multiparametrica     5
+Levantamiento                                                                              3
+
+Sample Resolución visita (5):
+- Se hace cambio de flowcell artesanal por flowcell original de la marca quedando instalado e integrado, pendiente de cambio de sonda HL4 por problemas de medición de la sonda existente 
+- Queda pendiente la integración de la sonda multiparamétrica HL4, debido a que el componente DDR30G-5, encargado de transformar 24 VDC a 12 VDC, no se energiza.
+Mañana 21/11/2025 se realizará el reemplazo por un nuevo componente, tras lo cual se procederá con la integración del punto.
+- Se encuentra pendiente de la instalación del panel fotovoltaico y canalización por personal de ASAP. 
+- Se verifica que el arranque realizado en la tubería no es donde se dejó estandarizado para todos los recintos, (cuello de cisne).
+Este arranque se generó en luego de la válvula de check y no después del caudalimetro.
+Se debe levantarlo a Patricio 
+- Se acompaño a levantamiento técnico en cerro  reforestacion tranque 4. 
+
+Sample Observaciones (5):
+
+========================================
+
+--- TIPO DE TRABAJO: MC ---
+Total registros: 19
+
+Top 5 Causa visita:
+Causa visita
+Mantenimiento correctivo                           5
+Mantenciones preventivas - correctivas             2
+Mantenimiento preventivo y soporte                 2
+Mantenimiento                                      2
+Mantenimiento preventivo a puntos de inyección     2
+
+Sample Resolución visita (5):
+- Se integra sensor hidrostatico configurando comunicación rs485 y Zero a nivel piso OK.
+Se realizan pruebas de nivel y validación de datos con plataforma ok.
+Se valida nivel con pozometro ok.
+Sensor instalado a 85 mts, espejo de agua 67,19 mts
+- Permisos de bloqueos ok
+Coordinación con eléctrico ok
+Coordinación con operador y jefe tranque ok
+Cambio de tablero ok
+Configuración de caudalimetro y A.R. ok
+- Pozo PBO 01 finalizado con éxito, por problemas en cargar documentos no se pudo realizar el dia 28 de octubre, es solo información del s.h. el resto quedo ok.
+- Se realiza mantenimiento en perfectas condiciones, pt, permisos de bloqueos todo en orden.
+VFL por operador de bloqueo ok.
+Punto queda transmitiendo datos ok.
+Queda pendiente configuración de analizador de red por desbloqueo tarde de operador.
+SE CANALIZA CON SILVIN RIEL DESDE CAJA ESTANCA A CAUDALIMETRO, esta canalización anterior estaba en mal estado por lo cual se realizo asi para poder tener datos en plataforma de forma robusta y segura.
+Paso siguiente a segur luego de configuración de analizador de red, validación de datos terreno con plataforma.
+- Se deja configurado el caudalimetro del pozo 23 con su pulso correspondiente para la lectura del volumen y el caudal. 
+Se deja el pulso conectado a la entrada Digital DI2 del NODO Lora UC300.
+ Se ajustan valores de cantidad de pulsos mediante software toolbox de milesight.
+Se contrastan valores en plataforma obteniendo un gran negativo producto la diferencia del totalizador del caudalimetro previamente instalado.
+Se realizan pruebas de partir parar del pozo y se deja recinto tal como se ha encontrado.
+
+Sample Observaciones (5):
+- Se configura rutina modbus ya que al integrar nuevo instrumento este deja de leer equipos de medición.
+- S/O
+- Queda pendiente instalación de sensor más configuración 
+- Sensor se instalo el día 28 pero no dejo cargarlo en OT, datos de instalación validado en plataforma
+- Cambio de tablero con equipos nuevos, Tomas quedara al pendiente para su revisión. (Raspberrys)
+
+========================================
+
+--- TIPO DE TRABAJO: MP ---
+Total registros: 29
+
+Top 5 Causa visita:
+Causa visita
+Mantenciones preventivas                                          6
+Conexionado de instrumentación y mantenimiento preventivo.        4
+Mantenimiento preventivo a puntos de inyección                    4
+Soporte terreno y cambio de sondas                                2
+Cambio de sondas multiparametricas y revisión de programa PLC.    2
+
+Sample Resolución visita (5):
+- Cambio de sonda multiparamétrica para enviar a calibración
+
+Limpieza a flowcell, contrastación y validación de datos. 
+- Se realiza cambio de sonda multiparametrica existente por provisoria para poder llevar la sonda existente a calibrar, verificación de funcionamiento programa PLC, UC-300 y plataforma. Se obtiene congruencia en los datos.
+- Se realiza revisión del equipo y los tableros existentes en el punto.
+Se contrastan valores y se realiza limpieza en el tablero.
+
+Se realiza ajustes de variables de nivel. Se recomienda actualizar tablero de control o utilizar placa modbus para leer los esclavos del punto: 
+- sensor hidrostatico
+- caudalimetro
+- analizador de red
+
+- Se realiza cambio de sonda multiparametrica provisoria por calibrada, verificación de funcionamiento programa PLC, UC-300 y plataforma. Se obtiene congruencia en los datos.
+- Se ajusta el volumen de caudalimetro en PLC directamente
+
+Se realiza cambio de conexionado en bornera modbus directo a plc para poder leer sonda multiparametrica
+Luego de este cambio se visualiza correcto funcionamiento de lectura de datos en el punto.
+
+Limpieza de flowcell
+Observación se debe calibrar sonda por tema de temperatura
+Se debe cambiar conectores hidráulicos de microtubo hacia la válvula de salida de agua.
+
+Sample Observaciones (5):
+- Se saca para calibración 
+- Certificado actual sonda retirada 
+- Certificado actual sonda retirada.
+- ...
+- Sonda en estación reelevadora 
+
+========================================
+
+--- TIPO DE TRABAJO: ST ---
+Total registros: 195
+
+Top 5 Causa visita:
+Causa visita
+Mantenimiento preventivo                     64
+Configuraciones                               9
+Revisión sensores de nivel                    6
+Mantenimiento preventivo y contrastacion      5
+Instalación / soporte                         5
+
+Sample Resolución visita (5):
+- Se realizo inspección visual y mantenimiento de cada punto. Mantenimiento tablero planta solar y tablero de telemetria PI 20
+
+- Por orden del cliente se realiza toma de fotografías del estado de piscina 4000
+- Se realizo aumento de caudal en pozo PI 17 Y además inspección de pozo PI 20 ya había rebalse del pozo
+- Se realizo mantenimiento preventivo, limpieza de panel reapriete de cables y limpieza de tableros
+- El transmisor queda registrando datos cada 30 minutos.
+Se realiza cambio de tarjeta SD y reseteo de transmisor con su respectiva configuración.
+Los registros se guardaron en computador para posterior compartir a equipo de reportabilidad 
+
+Sample Observaciones (5):
+
+========================================
+
