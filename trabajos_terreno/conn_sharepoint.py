@@ -13,8 +13,6 @@ def get_auth_token():
     Gets an authentication token from Microsoft Graph API.
     """
 
-
-
     app = msal.ConfidentialClientApplication(
         client_id=os.environ["MS_CLIENT_ID"],
         client_credential=os.environ["MS_CLIENT_SECRET"],
