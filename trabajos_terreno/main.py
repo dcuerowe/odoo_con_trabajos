@@ -42,6 +42,8 @@ def job():
             # Procesa las nuevas entradas encontradas
             data = process_entrys(nuevas_entradas, CONNECTEAM_API_KEY) #sp al final del argumento
 
+            print(tabulate.tabulate(data, headers='keys', tablefmt='grid'))
+
             try:
                 # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
                 send_data(data, 'Terreno', 'OTS', sp)

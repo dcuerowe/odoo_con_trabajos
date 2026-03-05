@@ -47,7 +47,7 @@ def ordenar_respuestas(estructura, respuestas):
                     dt_utc = datetime.fromtimestamp(ts, tz=timezone.utc)
                     dt_chile = dt_utc.astimezone(ZoneInfo("America/Santiago"))
                     # Devuelve fecha y hora si existen, o solo fecha
-                    return dt_chile.strftime("%Y-%m-%d %H:%M:%S")
+                    return dt_chile.strftime("%d-%m-%Y")
                 except:
                     return 'Error Fecha'
             return ''
@@ -74,7 +74,7 @@ def ordenar_respuestas(estructura, respuestas):
         fecha_envio_str = ""
         if ts_envio:
              dt_envio = datetime.fromtimestamp(ts_envio, tz=timezone.utc).astimezone(ZoneInfo("America/Santiago"))
-             fecha_envio_str = dt_envio.strftime("%d/%m/%Y %H:%M")
+             fecha_envio_str = dt_envio.strftime("%d-%m-%Y")
 
         fila_datos = {
             '#': submission.get('entryNum'),
