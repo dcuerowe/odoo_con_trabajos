@@ -47,7 +47,7 @@ def ordenar_respuestas(estructura, respuestas):
                     dt_utc = datetime.fromtimestamp(ts, tz=timezone.utc)
                     dt_chile = dt_utc.astimezone(ZoneInfo("America/Santiago"))
                     # Devuelve fecha y hora si existen, o solo fecha
-                    return dt_chile.strftime("%d-%m-%Y")
+                    return dt_chile.strftime("%d/%m/%Y")
                 except:
                     return 'Error Fecha'
             return ''
