@@ -267,7 +267,7 @@ def process_entrys(ordered_responses, API_key_c):
             #Variables globales
             proyecto = df_visita[f"{i}.1 Proyecto"].to_list()[0]
             punto = df_visita[f'{i}.1 Punto de monitoreo'].to_list()[0]
-            ot = df_visita['#'].to_list()[0]
+            ot = f"III-{df_visita['#'].to_list()[0]}"
             contrato = df_visita['Contrato'].to_list()[0]
             fecha = df_visita['Fecha visita '].to_list()[0]
             tecnico = df_visita['user'].to_list()[0].strip()
