@@ -47,7 +47,7 @@ def job():
 
             try:
                 # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
-                # send_data(data_terreno, 'Terreno', 'OTS', sp)
+                send_data(data_terreno, 'Terreno', 'OTS', sp)
                 send_data(data_inspeccion, 'Inspección', 'Ronda', sp)
 
 
