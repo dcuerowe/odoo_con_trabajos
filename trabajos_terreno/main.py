@@ -16,6 +16,7 @@ from processor import process_entrys
 from excel_manager import send_data
 
 
+
 def job():
     print('\n-> Detección automática de OTs en Connecteam')
     
@@ -40,13 +41,14 @@ def job():
             print(f"Se encontraron {len(nuevas_entradas)} nuevas entradas. Procesando...")
 
             # Procesa las nuevas entradas encontradas
-            data = process_entrys(nuevas_entradas, CONNECTEAM_API_KEY) #sp al final del argumento
+            data_terreno, data_inspeccion = process_entrys(nuevas_entradas, CONNECTEAM_API_KEY) #sp al final del argumento
 
-            print(tabulate.tabulate(data, headers='keys', tablefmt='grid'))
+            # print(tabulate.tabulate(data, headers='keys', tablefmt='grid'))
 
             try:
                 # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
-                send_data(data, 'Terreno', 'OTS', sp)
+                # send_data(data_terreno, 'Terreno', 'OTS', sp)
+                send_data(data_inspeccion, 'Inspección', 'Ronda', sp)
 
 
             except Exception as e:

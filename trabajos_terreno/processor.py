@@ -2,6 +2,7 @@ import re
 import base64
 import traceback
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from connecteam_api import user
 
@@ -9,7 +10,8 @@ from connecteam_api import user
 
 def process_entrys(ordered_responses, API_key_c):
     
-    datos = []
+    datos_terreno = []
+    datos_inspeccion = []
     for i, r in ordered_responses.iterrows():
 
         r_clean = r.dropna()
@@ -33,6 +35,14 @@ def process_entrys(ordered_responses, API_key_c):
         except Exception as e:
             print(f"Error al asignar el nombre del usuario al DataFrame: {e}")
             traceback.print_exc()
+
+
+        # Agrupación para las visitas de inspección
+        if df['Tipo de visita realizada'].item() == '(R) Ronda diaria de Inspección':
+            # print(df_columnas)
+            df = df.drop(columns=['Fotos '])
+            datos_inspeccion.append(df)
+            continue
 
 
         #Elementos globales
@@ -267,7 +277,7 @@ def process_entrys(ordered_responses, API_key_c):
             #Variables globales
             proyecto = df_visita[f"{i}.1 Proyecto"].to_list()[0]
             punto = df_visita[f'{i}.1 Punto de monitoreo'].to_list()[0]
-            ot = f"III-{df_visita['#'].to_list()[0]}"
+            ot = f'III-{df_visita['#'].to_list()[0]}'
             contrato = df_visita['Contrato'].to_list()[0]
             fecha = df_visita['Fecha visita '].to_list()[0]
             tecnico = df_visita['user'].to_list()[0].strip()
@@ -307,7 +317,7 @@ def process_entrys(ordered_responses, API_key_c):
 
 
                         
-                        datos.append({
+                        datos_terreno.append({
                             'OT': ot,
                             'Técnico': tecnico,
                             'Contrato': contrato,
@@ -348,7 +358,7 @@ def process_entrys(ordered_responses, API_key_c):
                         obs_CF = dic_trabajo_CF[f'{i}.2.{equipo} CF | Observación']
                         alcance_CF = dic_trabajo_CF[f'{i}.2.{equipo} CF | Tipo de Ajuste']
 
-                        datos.append({
+                        datos_terreno.append({
                             'OT': ot,
                             'Técnico': tecnico,
                             'Contrato': contrato,
@@ -389,7 +399,7 @@ def process_entrys(ordered_responses, API_key_c):
                         serial_CI = dic_trabajo_CI[f'{i}.2.{equipo} CI | N° de serie']
                         obs_CI = dic_trabajo_CI[f'{i}.2.{equipo} CI | Observación']
 
-                        datos.append({
+                        datos_terreno.append({
                             'OT': ot,
                             'Técnico': tecnico,
                             'Contrato': contrato,
@@ -437,7 +447,7 @@ def process_entrys(ordered_responses, API_key_c):
                             obs_I = dic_trabajo_I[f'{i}.2.{equipo} I ({t}) | Observación']
                             alcance_I = 'IH | Habilitación de equipo' if t == 'I' else dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Alcance de la intervención"]
 
-                            datos.append({
+                            datos_terreno.append({
                                 'OT': ot,
                                 'Técnico': tecnico,
                                 'Contrato': contrato,
@@ -483,7 +493,7 @@ def process_entrys(ordered_responses, API_key_c):
                             obs_MP = dic_trabajo_MP[f'{i}.2.{equipo} MP ({t}) | Observación']
                             alcance_MP = None
 
-                            datos.append({
+                            datos_terreno.append({
                                 'OT': ot,
                                 'Técnico': tecnico,
                                 'Contrato': contrato,
@@ -521,7 +531,7 @@ def process_entrys(ordered_responses, API_key_c):
                         alcance_SO = dic_trabajo_SO[f"{i}.2.{equipo} SO | Tipo de solicitud"]
                         obs_SO = dic_trabajo_SO[f"{i}.2.{equipo} SO | Observación"]
 
-                        datos.append({
+                        datos_terreno.append({
                             'OT': ot,
                             'Técnico': tecnico,
                             'Contrato': contrato,
@@ -547,7 +557,7 @@ def process_entrys(ordered_responses, API_key_c):
                         })
                 
                 elif id == 'LT':
-                    datos.append({
+                    datos_terreno.append({
                         'OT': ot,
                         'Técnico': tecnico,
                         'Contrato': contrato,
@@ -573,7 +583,7 @@ def process_entrys(ordered_responses, API_key_c):
                     })
                 
                 elif id == 'C':
-                    datos.append({
+                    datos_terreno.append({
                         'OT': ot,
                         'Técnico': tecnico,
                         'Contrato': contrato,
@@ -598,6 +608,13 @@ def process_entrys(ordered_responses, API_key_c):
                         'Alcance': None
                     })
     
-    df_final = pd.DataFrame(datos)
+    # Generación de dataframe con los trabajos en terreno realizados
+    df_final_terreno = pd.DataFrame(datos_terreno)
 
-    return df_final    
+    # Generación de dataframe con las visitas de inspección realizadas
+
+    datos_aux = np.squeeze(datos_inspeccion)
+    df_final_inspeccion = pd.DataFrame(datos_aux)
+
+
+    return df_final_terreno, df_final_inspeccion
