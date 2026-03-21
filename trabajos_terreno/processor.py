@@ -40,7 +40,7 @@ def process_entrys(ordered_responses, API_key_c):
         # Agrupación para las visitas de inspección
         if df['Tipo de visita realizada'].item() == '(R) Ronda diaria de Inspección':
             # print(df_columnas)
-            df = df.drop(columns=['Fotos '])
+    
             # print(df.columns.to_list())
             datos_inspeccion.append(df)
             continue
@@ -614,8 +614,10 @@ def process_entrys(ordered_responses, API_key_c):
 
     # Generación de dataframe con las visitas de inspección realizadas
 
-    datos_aux = np.squeeze(datos_inspeccion)
-    df_final_inspeccion = pd.DataFrame(datos_aux)
+    if datos_inspeccion:
+        df_final_inspeccion = pd.concat(datos_inspeccion, ignore_index=True)
+    else:
+        df_final_inspeccion = pd.DataFrame()
     
 
     # --- Expansión por "puntos visitados" ---
@@ -637,6 +639,7 @@ def process_entrys(ordered_responses, API_key_c):
                 filas_expandidas.append(fila)
 
         df_final_inspeccion = pd.DataFrame(filas_expandidas).reset_index(drop=True)
+        df_final_inspeccion = df_final_inspeccion.drop(columns=['Fotos '])
 
     else:
         print(df_final_inspeccion.columns.to_list())
