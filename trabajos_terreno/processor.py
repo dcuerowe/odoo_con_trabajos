@@ -41,6 +41,7 @@ def process_entrys(ordered_responses, API_key_c):
         if df['Tipo de visita realizada'].item() == '(R) Ronda diaria de Inspección':
             # print(df_columnas)
             df = df.drop(columns=['Fotos '])
+            # print(df.columns.to_list())
             datos_inspeccion.append(df)
             continue
 
@@ -277,7 +278,7 @@ def process_entrys(ordered_responses, API_key_c):
             #Variables globales
             proyecto = df_visita[f"{i}.1 Proyecto"].to_list()[0]
             punto = df_visita[f'{i}.1 Punto de monitoreo'].to_list()[0]
-            ot = f'III-{df_visita['#'].to_list()[0]}'
+            ot = 'III-' + str(df_visita['#'].to_list()[0])
             contrato = df_visita['Contrato'].to_list()[0]
             fecha = df_visita['Fecha visita '].to_list()[0]
             tecnico = df_visita['user'].to_list()[0].strip()
@@ -615,6 +616,28 @@ def process_entrys(ordered_responses, API_key_c):
 
     datos_aux = np.squeeze(datos_inspeccion)
     df_final_inspeccion = pd.DataFrame(datos_aux)
+    
 
+    # --- Expansión por "puntos visitados" ---
+    # Cada registro cuya columna "puntos visitados" contiene un string "a,b,c,..."
+    # se expande en tantas filas como puntos tenga, asignando un punto individual por fila.
+    COLUMNA_PUNTOS = "Puntos visitados"
 
+    if COLUMNA_PUNTOS in df_final_inspeccion.columns and not df_final_inspeccion.empty:
+        filas_expandidas = []
+        for _, fila in df_final_inspeccion.iterrows():
+            puntos_raw = fila[COLUMNA_PUNTOS]
+            if pd.notna(puntos_raw) and "," in str(puntos_raw):
+                puntos_lista = [p.strip() for p in str(puntos_raw).split(",") if p.strip()]
+                for punto in puntos_lista:
+                    fila_nueva = fila.copy()
+                    fila_nueva[COLUMNA_PUNTOS] = punto
+                    filas_expandidas.append(fila_nueva)
+            else:
+                filas_expandidas.append(fila)
+
+        df_final_inspeccion = pd.DataFrame(filas_expandidas).reset_index(drop=True)
+
+    else:
+        print(df_final_inspeccion.columns.to_list())
     return df_final_terreno, df_final_inspeccion
