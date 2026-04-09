@@ -296,7 +296,7 @@ def process_entrys(ordered_responses, API_key_c):
             resolución = df_visita[f'{i}.3 Resolución de visita'].to_list()[0]
             calidad = df_visita['Calidad del Servicio'].to_list()[0]
             residuo = df_visita['¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'].to_list()[0]
-            tipo_residuo = df_visita['Indique el modelo y serial de los residuos retirados'].to_list()[0] if residuos == 'Sí' else None
+            tipo_residuo = df_visita['Indique el modelo y serial de los residuos retirados'].to_list()[0] if residuo == 'Sí' else None
 
 
 
