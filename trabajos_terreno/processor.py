@@ -258,14 +258,14 @@ def process_entrys(ordered_responses, API_key_c):
             for col in df_visita.columns:
                 if ' CI |' in col: # Buscamos ' CI |' para identificar las columnas de CI
                     # Extraemos el prefijo 
-                    prefix_end_index = col.find(' CF |') + 4 # Sumamos 4 para incluir ' CI'
+                    prefix_end_index = col.find(' CI |') + 4 # Sumamos 4 para incluir ' CI'
                     prefix = col[:prefix_end_index].strip()
-                    CF_prefijo.add(prefix)
+                    CI_prefijo.add(prefix)
                     
             conteo_instancias_CI = len(CI_prefijo)
 
 
-            #Cantidad de CI realizadas
+            #Cantidad de SO realizadas
             SO_prefijo = set()
             for col in df_visita.columns:
                 if ' SO |' in col: # Buscamos ' SO |' para identificar las columnas de SO
