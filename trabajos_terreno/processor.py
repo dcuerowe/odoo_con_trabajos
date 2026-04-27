@@ -113,9 +113,12 @@ def process_entrys(ordered_responses, API_key_c):
             columnas_visita = [columna for columna in df_columnas if columna.startswith(i)]
             #columnas_visita.append(f'{i} Proyecto') 
             if 'Indique el modelo y serial de los residuos retirados' in df_columnas:
-                columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST', '¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?', 'Indique el modelo y serial de los residuos retirados'] + columnas_visita 
+                # columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST', '¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?', 'Indique el modelo y serial de los residuos retirados'] + columnas_visita 
+                columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST'] + columnas_visita 
+            
             else:
-                columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST', '¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'] + columnas_visita 
+                # columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST', '¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'] + columnas_visita 
+                columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST'] + columnas_visita 
  
             #Dejando un dataframe a nivel de visita de punto
             df_visita = df[columnas_visita].copy()
