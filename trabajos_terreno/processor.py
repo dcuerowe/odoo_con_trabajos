@@ -295,8 +295,8 @@ def process_entrys(ordered_responses, API_key_c):
             ast = df_visita['AST'].to_list()[0]
             resolución = df_visita[f'{i}.3 Resolución de visita'].to_list()[0]
             calidad = df_visita['Calidad del Servicio'].to_list()[0]
-            residuo = df_visita['¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'].to_list()[0]
-            tipo_residuo = df_visita['Indique el modelo y serial de los residuos retirados'].to_list()[0] if residuo == 'Sí' else None
+            #residuo = df_visita['¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'].to_list()[0]
+            #tipo_residuo = df_visita['Indique el modelo y serial de los residuos retirados'].to_list()[0] if residuo == 'Sí' else None
 
 
 
@@ -347,8 +347,8 @@ def process_entrys(ordered_responses, API_key_c):
                             'Modelo': modelo_MC,
                             'N° serie': serial_MC,
                             'Alcance': alcance_MC,
-                            'Residuo': residuo,
-                            'Tipo de residuo': tipo_residuo
+                            #'Residuo': residuo,
+                            #'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == 'CF':
@@ -390,8 +390,8 @@ def process_entrys(ordered_responses, API_key_c):
                             'Modelo': modelo_CF,
                             'N° serie': serial_CF,
                             'Alcance': alcance_CF,
-                            'Residuo': residuo,
-                            'Tipo de residuo': tipo_residuo
+                            #'Residuo': residuo,
+                            #'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == 'CI':
@@ -433,8 +433,8 @@ def process_entrys(ordered_responses, API_key_c):
                             'Modelo': modelo_CI,
                             'N° serie': serial_CI,
                             'Alcance': alcance_CI,
-                            'Residuo': residuo,
-                            'Tipo de residuo': tipo_residuo
+                            # 'Residuo': residuo,
+                            # 'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == "I":
@@ -483,8 +483,8 @@ def process_entrys(ordered_responses, API_key_c):
                                 'Modelo': modelo_I,
                                 'N° serie': serial_I,
                                 'Alcance': alcance_I,
-                                'Residuo': residuo,
-                                'Tipo de residuo': tipo_residuo
+                                # 'Residuo': residuo,
+                                # 'Tipo de residuo': tipo_residuo
                             })
                     
                 elif id == "MP":
@@ -531,8 +531,8 @@ def process_entrys(ordered_responses, API_key_c):
                                 'Modelo': modelo_MP,
                                 'N° serie': serial_MP,
                                 'Alcance': alcance_MP,
-                                'Residuo': residuo,
-                                'Tipo de residuo': tipo_residuo
+                                # 'Residuo': residuo,
+                                # 'Tipo de residuo': tipo_residuo
                             })
 
                 elif id == 'SO':
@@ -571,8 +571,8 @@ def process_entrys(ordered_responses, API_key_c):
                             'Modelo': None,
                             'N° serie': None,
                             'Alcance': alcance_SO,
-                            'Residuo': residuo,
-                            'Tipo de residuo': tipo_residuo
+                            # 'Residuo': residuo,
+                            # 'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == 'LT':
@@ -599,8 +599,8 @@ def process_entrys(ordered_responses, API_key_c):
                         'Modelo': None,
                         'N° serie': None,
                         'Alcance': None,
-                        'Residuo': residuo,
-                        'Tipo de residuo': tipo_residuo
+                        # 'Residuo': residuo,
+                        # 'Tipo de residuo': tipo_residuo
                     })
                 
                 elif id == 'C':
@@ -627,8 +627,8 @@ def process_entrys(ordered_responses, API_key_c):
                         'Modelo': None,
                         'N° serie': None,
                         'Alcance': None,
-                        'Residuo': residuo,
-                        'Tipo de residuo': tipo_residuo
+                        # 'Residuo': residuo,
+                        # 'Tipo de residuo': tipo_residuo
                     })
 
                 elif id == 'G':
@@ -655,8 +655,8 @@ def process_entrys(ordered_responses, API_key_c):
                         'Modelo': None,
                         'N° serie': None,
                         'Alcance': None,
-                        'Residuo': residuo,
-                        'Tipo de residuo': tipo_residuo
+                        # 'Residuo': residuo,
+                        # 'Tipo de residuo': tipo_residuo
                     })
     
     # Generación de dataframe con los trabajos en terreno realizados
