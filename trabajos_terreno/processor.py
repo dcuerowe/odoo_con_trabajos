@@ -112,8 +112,14 @@ def process_entrys(ordered_responses, API_key_c):
             # Columnas del punto {1} | general
             columnas_visita = [columna for columna in df_columnas if columna.startswith(i)]
             #columnas_visita.append(f'{i} Proyecto') 
-            columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST'] + columnas_visita 
+            if 'Indique el modelo y serial de los residuos retirados' in df_columnas:
+                # columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST', '¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?', 'Indique el modelo y serial de los residuos retirados'] + columnas_visita 
+                columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST'] + columnas_visita 
             
+            else:
+                # columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST', '¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'] + columnas_visita 
+                columnas_visita = ['#','Contrato', 'Causa visita', 'user', 'Fecha visita ','Calidad del Servicio', 'Nombre del Cliente', 'PT (Permiso de trabajo)', 'DET (Análisis de Riesgos)', 'Cinco Pasos para Trabajar Seguro', 'Charla de 5 Minutos', 'Check List de Camioneta/ Somnolencia', 'AST'] + columnas_visita 
+ 
             #Dejando un dataframe a nivel de visita de punto
             df_visita = df[columnas_visita].copy()
 
@@ -255,14 +261,14 @@ def process_entrys(ordered_responses, API_key_c):
             for col in df_visita.columns:
                 if ' CI |' in col: # Buscamos ' CI |' para identificar las columnas de CI
                     # Extraemos el prefijo 
-                    prefix_end_index = col.find(' CF |') + 4 # Sumamos 4 para incluir ' CI'
+                    prefix_end_index = col.find(' CI |') + 4 # Sumamos 4 para incluir ' CI'
                     prefix = col[:prefix_end_index].strip()
-                    CF_prefijo.add(prefix)
+                    CI_prefijo.add(prefix)
                     
             conteo_instancias_CI = len(CI_prefijo)
 
 
-            #Cantidad de CI realizadas
+            #Cantidad de SO realizadas
             SO_prefijo = set()
             for col in df_visita.columns:
                 if ' SO |' in col: # Buscamos ' SO |' para identificar las columnas de SO
@@ -292,6 +298,9 @@ def process_entrys(ordered_responses, API_key_c):
             ast = df_visita['AST'].to_list()[0]
             resolución = df_visita[f'{i}.3 Resolución de visita'].to_list()[0]
             calidad = df_visita['Calidad del Servicio'].to_list()[0]
+            #residuo = df_visita['¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'].to_list()[0]
+            #tipo_residuo = df_visita['Indique el modelo y serial de los residuos retirados'].to_list()[0] if residuo == 'Sí' else None
+
 
 
             for id in id_tipos_realizados:
@@ -340,7 +349,9 @@ def process_entrys(ordered_responses, API_key_c):
                             'Equipo': tipo_MC,
                             'Modelo': modelo_MC,
                             'N° serie': serial_MC,
-                            'Alcance': alcance_MC
+                            'Alcance': alcance_MC,
+                            #'Residuo': residuo,
+                            #'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == 'CF':
@@ -381,7 +392,9 @@ def process_entrys(ordered_responses, API_key_c):
                             'Equipo': tipo_CF,
                             'Modelo': modelo_CF,
                             'N° serie': serial_CF,
-                            'Alcance': alcance_CF
+                            'Alcance': alcance_CF,
+                            #'Residuo': residuo,
+                            #'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == 'CI':
@@ -422,7 +435,9 @@ def process_entrys(ordered_responses, API_key_c):
                             'Equipo': tipo_CI,
                             'Modelo': modelo_CI,
                             'N° serie': serial_CI,
-                            'Alcance': alcance_CI
+                            'Alcance': alcance_CI,
+                            # 'Residuo': residuo,
+                            # 'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == "I":
@@ -470,7 +485,9 @@ def process_entrys(ordered_responses, API_key_c):
                                 'Equipo': tipo_I,
                                 'Modelo': modelo_I,
                                 'N° serie': serial_I,
-                                'Alcance': alcance_I
+                                'Alcance': alcance_I,
+                                # 'Residuo': residuo,
+                                # 'Tipo de residuo': tipo_residuo
                             })
                     
                 elif id == "MP":
@@ -516,7 +533,9 @@ def process_entrys(ordered_responses, API_key_c):
                                 'Equipo': tipo_MP,
                                 'Modelo': modelo_MP,
                                 'N° serie': serial_MP,
-                                'Alcance': alcance_MP
+                                'Alcance': alcance_MP,
+                                # 'Residuo': residuo,
+                                # 'Tipo de residuo': tipo_residuo
                             })
 
                 elif id == 'SO':
@@ -554,7 +573,9 @@ def process_entrys(ordered_responses, API_key_c):
                             'Equipo': None,
                             'Modelo': None,
                             'N° serie': None,
-                            'Alcance': alcance_SO
+                            'Alcance': alcance_SO,
+                            # 'Residuo': residuo,
+                            # 'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == 'LT':
@@ -580,7 +601,9 @@ def process_entrys(ordered_responses, API_key_c):
                         'Equipo': None,
                         'Modelo': None,
                         'N° serie': None,
-                        'Alcance': None
+                        'Alcance': None,
+                        # 'Residuo': residuo,
+                        # 'Tipo de residuo': tipo_residuo
                     })
                 
                 elif id == 'C':
@@ -606,7 +629,37 @@ def process_entrys(ordered_responses, API_key_c):
                         'Equipo': None,
                         'Modelo': None,
                         'N° serie': None,
-                        'Alcance': None
+                        'Alcance': None,
+                        # 'Residuo': residuo,
+                        # 'Tipo de residuo': tipo_residuo
+                    })
+
+                elif id == 'G':
+                    datos_terreno.append({
+                        'OT': ot,
+                        'Técnico': tecnico,
+                        'Contrato': contrato,
+                        'Causa visita': causa_visita,
+                        'Proyecto': proyecto,
+                        'Asset': punto,
+                        'Tipo de trabajo': id,
+                        'Fecha visita': fecha,
+                        'Cliente': cliente,
+                        'Resolución visita': resolución,
+                        'Calidad del Servicio': calidad,
+                        "PT (Permiso de trabajo)": pt,
+                        "DET (Análisis de Riesgos)": det,
+                        "Cinco Pasos para Trabajar Seguro": cinco_pasos,
+                        "Charla de 5 Minutos": charla,
+                        "Check List de Camioneta/ Somnolencia": camioneta,
+                        "AST": ast,
+                        'Observación': None,
+                        'Equipo': None,
+                        'Modelo': None,
+                        'N° serie': None,
+                        'Alcance': None,
+                        # 'Residuo': residuo,
+                        # 'Tipo de residuo': tipo_residuo
                     })
     
     # Generación de dataframe con los trabajos en terreno realizados
