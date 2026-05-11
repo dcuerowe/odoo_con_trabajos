@@ -372,8 +372,8 @@ def process_entrys(ordered_responses, API_key_c):
                             serial_R = dic_trabajo_R[f'{filtro_R_E} | N° de serie']
                             obs_R = dic_trabajo_R[f'{filtro_general} | Observación']
                             alcance_R = dic_trabajo_R[f'{filtro_general} | Motivo de reemplazo']
-                            # trabajo_R = "CI" if (alcance_R == "Calibración programada" and t =="E") or (alcance_R == "Retorno de calibración" and t =="I") else t
-                            trabajo_R = t
+                            trabajo_R = "CI" if (alcance_R == "Calibración programada" and t =="E") or (alcance_R == "Retorno de calibración" and t =="I") else t
+                            # trabajo_R = t
 
 
 
