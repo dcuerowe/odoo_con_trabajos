@@ -352,7 +352,8 @@ def process_entrys(ordered_responses, API_key_c):
                     #Reemplazo completo
                     for t in R_type:
                         for equipo in range(1, conteo_R[t]+1):
-                            filtro_general = f"{i}.2.{equipo} R"        
+                 
+                            filtro_general = f"{i}.2.{equipo} R"
                             columnas_general = df_trabajo.filter(like=filtro_general).columns.to_list()
 
                             filtro_R_E = f"{i}.2.{equipo} R ({t})"        
@@ -533,49 +534,6 @@ def process_entrys(ordered_responses, API_key_c):
                             'Alcance': alcance_CF,
                             #'Residuo': residuo,
                             #'Tipo de residuo': tipo_residuo
-                        })
-                
-                elif id == 'CI':
-                    for equipo in range(1, conteo_instancias_CI+1):
-                        filtro_CI = f"{i}.2.{equipo} CI"        
-                        columnas_equipo_CI = df_trabajo.filter(like=filtro_CI).columns.to_list()
-                        
-                        #df trabajo se usa para la generación del informe
-                        df_trabajo_equipo_CI = df_trabajo[columnas_equipo_CI]
-                        dic_trabajo_CI = df_trabajo_equipo_CI.to_dict(orient='records')[0]
-
-                        #Elmentos propios del equipo
-                        alcance_CI = dic_trabajo_CI[f"{i}.2.{equipo} CI | Etapa"]
-                        modelo_CI = dic_trabajo_CI[f"{i}.2.{equipo} CI | Modelo"]
-                        tipo_CI = "Sonda multiparamétrica"
-                        serial_CI = dic_trabajo_CI[f'{i}.2.{equipo} CI | N° de serie']
-                        obs_CI = dic_trabajo_CI[f'{i}.2.{equipo} CI | Observación']
-
-                        datos_terreno.append({
-                            'OT': ot,
-                            'Técnico': tecnico,
-                            'Contrato': contrato,
-                            'Causa visita': causa_visita,
-                            'Proyecto': proyecto,
-                            'Asset': punto,
-                            'Tipo de trabajo': id,
-                            'Fecha visita': fecha,
-                            'Cliente': cliente,
-                            'Resolución visita': resolución,
-                            'Calidad del Servicio': calidad,
-                            "PT (Permiso de trabajo)": pt,
-                            "DET (Análisis de Riesgos)": det,
-                            "Cinco Pasos para Trabajar Seguro": cinco_pasos,
-                            "Charla de 5 Minutos": charla,
-                            "Check List de Camioneta/ Somnolencia": camioneta,
-                            "AST": ast,
-                            'Observación': obs_CI,
-                            'Equipo': tipo_CI,
-                            'Modelo': modelo_CI,
-                            'N° serie': serial_CI,
-                            'Alcance': alcance_CI,
-                            # 'Residuo': residuo,
-                            # 'Tipo de residuo': tipo_residuo
                         })
                 
                 elif id == "I":
@@ -834,4 +792,17 @@ def process_entrys(ordered_responses, API_key_c):
 
     else:
         print(df_final_inspeccion.columns.to_list())
+
+    # Ordenamiento por fecha descendente (más reciente primero) para que al
+    # insertar arriba en la tabla de Excel queden cronológicamente ordenados.
+    if not df_final_terreno.empty and 'Fecha visita' in df_final_terreno.columns:
+        df_final_terreno = df_final_terreno.sort_values(
+            by='Fecha visita', ascending=False, na_position='last', kind='stable'
+        ).reset_index(drop=True)
+
+    if not df_final_inspeccion.empty and 'Fecha visita ' in df_final_inspeccion.columns:
+        df_final_inspeccion = df_final_inspeccion.sort_values(
+            by='Fecha visita ', ascending=False, na_position='last', kind='stable'
+        ).reset_index(drop=True)
+
     return df_final_terreno, df_final_inspeccion

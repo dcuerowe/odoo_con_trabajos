@@ -46,11 +46,12 @@ def ordenar_respuestas(estructura, respuestas):
                 try:
                     dt_utc = datetime.fromtimestamp(ts, tz=timezone.utc)
                     dt_chile = dt_utc.astimezone(ZoneInfo("America/Santiago"))
-                    # Devuelve fecha y hora si existen, o solo fecha
-                    return dt_chile.strftime("%d/%m/%Y")
+                    # Devuelve objeto date para que Excel lo reconozca como fecha real
+                    # (evita interpretación mm/dd ambigua según locale de Excel).
+                    return dt_chile.date()
                 except:
                     return 'Error Fecha'
-            return ''
+            return None
         elif q_type == 'image':
             # Extraer URLs si existen
             imgs = answer_obj.get('images', [])
