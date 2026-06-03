@@ -9,10 +9,10 @@
 
 `processor.py` contiene la función principal `process_entrys`, encargada de transformar los registros crudos provenientes de formularios Connecteam en dos DataFrames estructurados:
 
-| Salida | Descripción |
-|---|---|
-| `df_final_terreno` | Registros normalizados de trabajos de terreno (mantenciones, instalaciones, reemplazos, etc.) |
-| `df_final_inspeccion` | Registros de rondas de inspección diarias, expandidos por punto visitado |
+| Salida                  | Descripción                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `df_final_terreno`    | Registros normalizados de trabajos de terreno (mantenciones, instalaciones, reemplazos, etc.) |
+| `df_final_inspeccion` | Registros de rondas de inspección diarias, expandidos por punto visitado                     |
 
 La función actúa como el **núcleo de normalización** del pipeline: recibe una tabla de respuestas crudas con columnas dinámicas y la descompone en registros atómicos a nivel de *equipo por punto de monitoreo por tipo de trabajo*.
 
@@ -26,10 +26,10 @@ def process_entrys(ordered_responses: pd.DataFrame, API_key_c: str) -> tuple[pd.
 
 ### Parámetros
 
-| Parámetro | Tipo | Descripción |
-|---|---|---|
+| Parámetro            | Tipo             | Descripción                                                                                                           |
+| --------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `ordered_responses` | `pd.DataFrame` | DataFrame con las respuestas del formulario Connecteam, ya ordenadas. Cada fila es una Orden de Trabajo (OT) completa. |
-| `API_key_c` | `str` | API Key de Connecteam, utilizada para resolver el ID de usuario a nombre legible. |
+| `API_key_c`         | `str`          | API Key de Connecteam, utilizada para resolver el ID de usuario a nombre legible.                                      |
 
 ### Retorno
 
@@ -39,7 +39,7 @@ def process_entrys(ordered_responses: pd.DataFrame, API_key_c: str) -> tuple[pd.
 
 ---
 
-## 3. Flujo de Procesamiento de Alto Nivel
+## 3. Flujo de Procesamiento 
 
 ```mermaid
 flowchart TD
@@ -114,23 +114,23 @@ Se definen los catálogos de referencia utilizados en el procesamiento:
 id_tipo_de_trabajo = ['MP', 'MC', 'I', 'R', 'CF']
 ```
 
-| ID | Nombre Completo |
-|---|---|
+| ID     | Nombre Completo        |
+| ------ | ---------------------- |
 | `MC` | Mantención Correctiva |
 | `MP` | Mantención Preventiva |
-| `I` | Instalación |
-| `R` | Reemplazo/Extracción |
+| `I`  | Instalación           |
+| `R`  | Reemplazo/Extracción  |
 | `CF` | Configuración/Ajustes |
 
 > **Nota**: Además de estos 5 tipos principales, el código también maneja los tipos `CI` (Calibración), `SO` (Solicitud de Obra), `LT`, `C` y `G`, que se procesan en bloques `elif` adicionales.
 
 ### 5.2 Subtipos
 
-| Tipo | Subtipos | Significado |
-|---|---|---|
-| `MP` | `T` (Tablero), `I` (Dispositivo) | Contexto del mantenimiento preventivo |
-| `I` | `I` (Dispositivo), `T` (Tablero) | Contexto de la instalación |
-| `R` | `E` (Extracción), `I` (Instalación) | Fase del reemplazo |
+| Tipo   | Subtipos                                  | Significado                           |
+| ------ | ----------------------------------------- | ------------------------------------- |
+| `MP` | `T` (Tablero), `I` (Dispositivo)      | Contexto del mantenimiento preventivo |
+| `I`  | `I` (Dispositivo), `T` (Tablero)      | Contexto de la instalación           |
+| `R`  | `E` (Extracción), `I` (Instalación) | Fase del reemplazo                    |
 
 ### 5.3 Mapa de Operadores
 
@@ -166,13 +166,13 @@ Las columnas del formulario Connecteam siguen un patrón jerárquico:
 
 **Ejemplos reales:**
 
-| Columna | Punto | Sección | Instancia | Tipo | Subtipo | Campo |
-|---|---|---|---|---|---|---|
-| `1.1 Punto de monitoreo` | 1 | 1 | — | — | — | Punto de monitoreo |
-| `1.2 Tipo de trabajo a realizar` | 1 | 2 | — | — | — | Tipo de trabajo |
-| `1.2.1 MC \| Modelo` | 1 | 2 | 1 | MC | — | Modelo |
-| `1.2.2 MP (I) \| N° de serie` | 1 | 2 | 2 | MP | I | N° de serie |
-| `2.2.1 R (E) \| Modelo` | 2 | 2 | 1 | R | E | Modelo |
+| Columna                            | Punto | Sección | Instancia | Tipo | Subtipo | Campo              |
+| ---------------------------------- | ----- | -------- | --------- | ---- | ------- | ------------------ |
+| `1.1 Punto de monitoreo`         | 1     | 1        | —        | —   | —      | Punto de monitoreo |
+| `1.2 Tipo de trabajo a realizar` | 1     | 2        | —        | —   | —      | Tipo de trabajo    |
+| `1.2.1 MC \| Modelo`              | 1     | 2        | 1         | MC   | —      | Modelo             |
+| `1.2.2 MP (I) \| N° de serie`    | 1     | 2        | 2         | MP   | I       | N° de serie       |
+| `2.2.1 R (E) \| Modelo`           | 2     | 2        | 1         | R    | E       | Modelo             |
 
 El algoritmo extrae el **primer dígito** de cada columna no nula para determinar cuántos puntos de monitoreo fueron visitados en esa OT.
 
@@ -196,6 +196,7 @@ Se extrae el campo de texto que lista los tipos de trabajo realizados (puede ser
 Se filtran las columnas relevantes para el punto actual y se agregan las columnas globales de la OT:
 
 **Columnas globales incluidas:**
+
 - `#` (Número de OT)
 - `Contrato`
 - `Causa visita`
@@ -208,11 +209,13 @@ Se filtran las columnas relevantes para el punto actual y se agregan las columna
 ### 7.3 Resolución del Proyecto y Punto de Monitoreo (Líneas 131–167)
 
 **Caso "No encontrado"** (punto no registrado en la lista de Connecteam):
+
 - Se busca la columna `{i} Proyecto` para el nombre del proyecto.
 - Se reemplaza el valor `"No encontrado"` con el nombre ingresado manualmente en `{i}.1 Indicar nombre del punto`.
 - Si falla la operación, se asignan valores por defecto y se salta el punto con `continue`.
 
 **Caso normal** (punto seleccionado de la lista):
+
 - El nombre del punto contiene el proyecto entre corchetes: `"Punto ABC [Proyecto XYZ]"`.
 - Se extrae el proyecto con regex: `re.search(r"\[([^\]]*)\]", ...)`.
 - Se limpia el nombre del punto eliminando la porción `[Proyecto XYZ]`.
@@ -234,19 +237,19 @@ conteo_instancias_MC = len(MC_prefijo)
 
 **Conteos calculados:**
 
-| Variable | Qué cuenta |
-|---|---|
-| `conteo_R['E']` | Cantidad de reemplazos tipo Extracción |
-| `conteo_R['I']` | Cantidad de reemplazos tipo Instalación |
-| `conteo_instancias_E` | Cantidad de extracciones independientes (Solo extracción) |
-| `conteo_I['I']` | Cantidad de instalaciones de dispositivos |
-| `conteo_I['T']` | Cantidad de instalaciones de tableros |
-| `conteo_MP['I']` | Cantidad de MP en dispositivos |
-| `conteo_MP['T']` | Cantidad de MP en tableros |
-| `conteo_instancias_MC` | Cantidad de mantenciones correctivas |
-| `conteo_instancias_CF` | Cantidad de configuraciones/ajustes |
-| `conteo_instancias_CI` | Cantidad de calibraciones |
-| `conteo_instancias_SO` | Cantidad de solicitudes de obra |
+| Variable                 | Qué cuenta                                                |
+| ------------------------ | ---------------------------------------------------------- |
+| `conteo_R['E']`        | Cantidad de reemplazos tipo Extracción                    |
+| `conteo_R['I']`        | Cantidad de reemplazos tipo Instalación                   |
+| `conteo_instancias_E`  | Cantidad de extracciones independientes (Solo extracción) |
+| `conteo_I['I']`        | Cantidad de instalaciones de dispositivos                  |
+| `conteo_I['T']`        | Cantidad de instalaciones de tableros                      |
+| `conteo_MP['I']`       | Cantidad de MP en dispositivos                             |
+| `conteo_MP['T']`       | Cantidad de MP en tableros                                 |
+| `conteo_instancias_MC` | Cantidad de mantenciones correctivas                       |
+| `conteo_instancias_CF` | Cantidad de configuraciones/ajustes                        |
+| `conteo_instancias_CI` | Cantidad de calibraciones                                  |
+| `conteo_instancias_SO` | Cantidad de solicitudes de obra                            |
 
 ---
 
@@ -281,6 +284,7 @@ Este es el tipo de trabajo **más complejo**, con dos flujos:
 Itera sobre los subtipos `R_type = ['E', 'I']` y por cada instancia del subtipo:
 
 **Campos específicos extraídos:**
+
 - `{filtro_R_E} | Modelo` → Modelo del equipo
 - `{filtro_general} | Tipo equipo/instrumento a reemplazar` → Tipo de equipo
 - `{filtro_R_E} | N° de serie` → Serial
@@ -301,6 +305,7 @@ Cuando el motivo del reemplazo es una **calibración programada** (extracción d
 Procesa equipos extraídos sin reemplazo inmediato. Itera sobre `conteo_instancias_E`.
 
 **Campos específicos:**
+
 - `{filtro_E} | Tipo equipo/instrumento a extraer`
 - `{filtro_E} | Motivo de extracción`
 
@@ -310,13 +315,13 @@ El tipo de trabajo se registra como `"E"`.
 
 Itera sobre `conteo_instancias_MC`. Cada instancia registra:
 
-| Campo | Columna Fuente |
-|---|---|
-| Modelo | `{i}.2.{n} MC \| Modelo` |
-| Equipo | `{i}.2.{n} MC \| Activo a intervenir` |
-| Serial | `{i}.2.{n} MC \| N° de serie` |
-| Operativo | `{i}.2.{n} MC \| ¿Equipo operativo tras trabajos?` |
-| Observación | `{i}.2.{n} MC \| Observación` |
+| Campo        | Columna Fuente                                       |
+| ------------ | ---------------------------------------------------- |
+| Modelo       | `{i}.2.{n} MC \| Modelo`                            |
+| Equipo       | `{i}.2.{n} MC \| Activo a intervenir`               |
+| Serial       | `{i}.2.{n} MC \| N° de serie`                      |
+| Operativo    | `{i}.2.{n} MC \| ¿Equipo operativo tras trabajos?` |
+| Observación | `{i}.2.{n} MC \| Observación`                      |
 
 - **Alcance**: Se establece como `None` (no aplica para MC).
 - El campo `operativo_MC` se extrae pero **no se incluye** en el diccionario de salida.
@@ -330,34 +335,39 @@ Idéntica en estructura a MC, con la adición de:
 ### 8.5 `CI` — Calibración Instrumental (Líneas 538–579)
 
 **Campos específicos:**
+
 - **Etapa** (`Alcance`): Registra la fase de calibración (e.g., envío, retorno).
 - **Tipo de equipo**: Se fija como `"Sonda multiparamétrica"` (hardcoded), ya que CI aplica exclusivamente a este tipo de instrumento.
 
 ### 8.6 `I` — Instalación (Líneas 581–629)
 
 Doble iteración:
+
 1. **Subtipo**: `I_type = ['I', 'T']` (Dispositivo / Tablero)
 2. **Instancias**: `conteo_I[t]`
 
 **Campos específicos:**
+
 - `Tipo de {I_translate[t]}` — se traduce dinámicamente según subtipo.
 - **Alcance**: Para dispositivos (`t == 'I'`) se fija como `'IH | Habilitación de equipo'`. Para tableros (`t == 'T'`) se lee del campo `Alcance de la intervención`.
 
 ### 8.7 `MP` — Mantención Preventiva (Líneas 631–677)
 
 Doble iteración análoga a Instalación:
+
 1. **Subtipo**: `MP_type = ['T', 'I']` (Tablero / Dispositivo)
 2. **Instancias**: `conteo_MP[t]`
 
 Las etiquetas de columna se adaptan dinámicamente usando `MP_translate`:
+
 - `MP_translate['I']` → `"Dispositivo"` → campo: `Dispositivo a intervenir`
 - `MP_translate['T']` → `"Tablero"` → campo: `Tablero a intervenir`
-
 - **Alcance**: Se establece como `None`.
 
 ### 8.8 `SO` — Solicitud de Obra (Líneas 679–717)
 
 **Campos específicos:**
+
 - `Tipo de solicitud` → Alcance
 - `Observación`
 - **Equipo, Modelo, Serial**: Se establecen como `None` (no aplica).
@@ -366,11 +376,11 @@ Las etiquetas de columna se adaptan dinámicamente usando `MP_translate`:
 
 Estos tres tipos generan registros **sin datos de equipo**. Todos los campos de equipo (`Equipo`, `Modelo`, `N° serie`, `Alcance`, `Observación`) se establecen como `None`.
 
-| ID | Significado probable |
-|---|---|
+| ID     | Significado probable   |
+| ------ | ---------------------- |
 | `LT` | Levantamiento Técnico |
-| `C` | Capacitación |
-| `G` | Gestión |
+| `C`  | Capacitación          |
+| `G`  | Gestión               |
 
 ---
 
@@ -474,30 +484,24 @@ graph LR
 
 ## 12. Dependencias Externas
 
-| Módulo | Uso |
-|---|---|
-| `re` | Extracción del nombre de proyecto desde la nomenclatura `[Proyecto]` |
-| `base64` | Importado pero **no utilizado** en la función actual |
-| `traceback` | Impresión de stack traces en errores de resolución de usuario |
-| `pandas` | Manipulación de DataFrames: filtrado, concat, expansión |
-| `numpy` | Importado pero **no utilizado** directamente |
-| `datetime` | Importado pero **no utilizado** directamente |
-| `connecteam_api.user` | Resolución de ID de usuario a nombre |
+| Módulo                 | Uso                                                                     |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `re`                  | Extracción del nombre de proyecto desde la nomenclatura `[Proyecto]` |
+| `base64`              | Importado pero**no utilizado** en la función actual              |
+| `traceback`           | Impresión de stack traces en errores de resolución de usuario         |
+| `pandas`              | Manipulación de DataFrames: filtrado, concat, expansión               |
+| `numpy`               | Importado pero**no utilizado** directamente                       |
+| `datetime`            | Importado pero**no utilizado** directamente                       |
+| `connecteam_api.user` | Resolución de ID de usuario a nombre                                   |
 
 ---
 
 ## 13. Consideraciones y Limitaciones Conocidas
 
 1. **Detección de puntos limitada a un dígito**: Solo se extrae el primer carácter de la columna (`col[0]`). Esto significa que el sistema soporta hasta **9 puntos visitados por OT** (1–9). Si una OT tuviera 10+ puntos, el punto `10` se mapearía incorrectamente a `1`.
-
 2. **Módulos importados sin uso**: `base64`, `numpy` y `datetime` se importan pero no se utilizan dentro de `process_entrys`.
-
 3. **Campo `operativo` no propagado**: Para los tipos MC, CF, I y MP se extrae un campo `¿Equipo operativo tras trabajos?`, pero este **no se incluye** en el diccionario de salida `datos_terreno`.
-
 4. **Tipo CI hardcoded**: El tipo de equipo para calibraciones se fija siempre como `"Sonda multiparamétrica"`, sin considerar otros equipos que podrían ser calibrados.
-
 5. **Diccionario `operators` sin uso**: Está definido dentro de la función pero no se utiliza en la lógica actual.
-
 6. **Manejo de errores en resolución de puntos**: Si falla la resolución de un punto "No encontrado", se ejecuta `continue` y el punto se **omite silenciosamente** del resultado.
-
 7. **Espacio trailing en nombres de columna**: Varias columnas tienen espacios al final (e.g., `'Fecha visita '`, `'Fotos '`), lo que requiere consistencia exacta al referenciarlas.
