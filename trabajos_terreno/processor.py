@@ -47,25 +47,30 @@ def process_entrys(ordered_responses, API_key_c):
 
 
         #Elementos globales
-        id_tipo_de_trabajo = ['MP', 'MC', 'I', 'CI', 'CF']
+        id_tipo_de_trabajo = ['MP', 'MC', 'I', 'R', 'CF']
 
         MP_type = ['T', 'I']
         MP_translate = {
             'I': 'Dispositivo',
             'T': 'Tablero'
         }
+        
+        R_type = ['E', 'I']
+
+        
 
 
-        I_type = ['I', 'T'] 
+        I_type = ['I', 'T', 'C'] 
         I_translate = {
                 'I': 'dispositivo',
-                'T': 'tablero'
+                'T': 'tablero',
+                'C': 'Categoría'
             }
         
         id_mantencion = {'MC': 'Mantención Correctiva',
                         'MP': 'Mantención Preventiva',
                         'I': 'Instalación',
-                        'CI': 'Calibración Instrumento',
+                        'R': 'Reemplazo/Extracción',
                         'CF': 'Configuración/Ajustes'}
         
         # intalaciones_interes = ['Tablero', 'Caudalímetro', 'Sensor de nivel', 'Sonda multiparamétrica', 'Otro']
@@ -176,6 +181,39 @@ def process_entrys(ordered_responses, API_key_c):
             
             #Cantidad de MP realizadas
 
+            R_E_prefijo = set()
+            for col in df_visita.columns:
+                if ' R (E) |' in col:
+                    prefix_end_index = col.find(' R (E) |') + 4
+                    prefix = col[:prefix_end_index].strip()
+                    R_E_prefijo.add(prefix)
+            conteo_instancias_R_E = len(R_E_prefijo)
+
+            # print(conteo_instancias_R_E)
+
+            R_I_prefijo = set()
+            for col in df_visita.columns:
+                if ' R (I) |' in col:
+                    prefix_end_index = col.find(' R (I) |') + 4
+                    prefix = col[:prefix_end_index].strip()
+                    R_I_prefijo.add(prefix)
+            conteo_instancias_R_I = len(R_I_prefijo)
+
+            # print(conteo_instancias_R_I)
+
+            conteo_R = {
+                'E': conteo_instancias_R_E,
+                'I': conteo_instancias_R_I
+            }
+
+            E_prefijo = set()
+            for col in df_visita.columns:
+                if ' E |' in col:
+                    prefix_end_index = col.find(' E |') + 4
+                    prefix = col[:prefix_end_index].strip()
+                    E_prefijo.add(prefix)
+            conteo_instancias_E = len(E_prefijo)
+
 
             #Conteo de instalaciones de instrumentos
             I_I_prefijo = set()
@@ -199,9 +237,23 @@ def process_entrys(ordered_responses, API_key_c):
             
             conteo_instancias_I_T = len(I_T_prefijo)
 
+            I_C_prefijo = set()
+            for col in df_visita.columns:
+                if ' I (C) |' in col: 
+                    # Extraemos el prefijo como '1.2.1 MP' o '1.2.2 MP'
+                    prefix_end_index = col.find(' I (C) |') + 4 # Sumamos 4 para incluir ' MP'
+                    prefix = col[:prefix_end_index].strip()
+                    I_C_prefijo.add(prefix)
+            
+            conteo_instancias_I_C = len(I_C_prefijo)
+            
+            print(conteo_instancias_I_C)
+            
+
             conteo_I = {
                 'I': conteo_instancias_I_I,
-                'T': conteo_instancias_I_T
+                'T': conteo_instancias_I_T,
+                'C': conteo_instancias_I_C
             }
 
 
@@ -304,12 +356,114 @@ def process_entrys(ordered_responses, API_key_c):
 
 
             for id in id_tipos_realizados:
-                columnas_trabajo = [columna for columna in df_visita.columns if f'{id}' in columna]
+                columnas_trabajo = [columna for columna in df_visita.columns if f'{id}' in columna or "E" in columna]
                 # columnas_trabajo = ['#', 'user', f"{i}.1 Proyecto", 'Fecha visita ', 'Nombre del Cliente'] + columnas_trabajo
                 df_trabajo = df_visita[columnas_trabajo]
 
+                #Tratamiento para reemplazos
+
+                if id == "R":
+
+                    #Reemplazo completo
+                    for t in R_type:
+                        for equipo in range(1, conteo_R[t]+1):
+                 
+                            filtro_general = f"{i}.2.{equipo} R"
+                            columnas_general = df_trabajo.filter(like=filtro_general).columns.to_list()
+
+                            filtro_R_E = f"{i}.2.{equipo} R ({t})"        
+                            columnas_R_E = df_trabajo.filter(like=filtro_R_E).columns.to_list()
+
+
+                            columnas_equipo_R = columnas_general + columnas_R_E
+
+                            
+                            # df trabajo se usa para la generación del informe
+                            df_trabajo_equipo_R = df_trabajo[columnas_equipo_R]
+                            dic_trabajo_R = df_trabajo_equipo_R.to_dict(orient='records')[0]
+
+                            # Elmentos propios del equipo
+                            modelo_R = dic_trabajo_R[f"{filtro_R_E} | Modelo"]
+                            tipo_R = dic_trabajo_R[f"{filtro_general} | Tipo equipo/instrumento a reemplazar"]
+                            serial_R = dic_trabajo_R[f'{filtro_R_E} | N° de serie']
+                            obs_R = dic_trabajo_R[f'{filtro_general} | Observación']
+                            alcance_R = dic_trabajo_R[f'{filtro_general} | Motivo de reemplazo']
+                            destino_R = dic_trabajo_R[f'{filtro_R_E} | Destino'] if t == "E" else None
+                            trabajo_R = t
+
+
+
+                            datos_terreno.append({
+                                'OT': ot,
+                                'Técnico': tecnico,
+                                'Contrato': contrato,
+                                'Causa visita': causa_visita,
+                                'Proyecto': proyecto,
+                                'Asset': punto,
+                                'Tipo de trabajo': trabajo_R,
+                                'Fecha visita': fecha,
+                                'Cliente': cliente,
+                                'Resolución visita': resolución,
+                                'Calidad del Servicio': calidad,
+                                "PT (Permiso de trabajo)": pt,
+                                "DET (Análisis de Riesgos)": det,
+                                "Cinco Pasos para Trabajar Seguro": cinco_pasos,
+                                "Charla de 5 Minutos": charla,
+                                "Check List de Camioneta/ Somnolencia": camioneta,
+                                "AST": ast,
+                                'Observación': obs_R,
+                                'Equipo': tipo_R,
+                                'Modelo': modelo_R,
+                                'N° serie': serial_R,
+                                'Alcance': alcance_R
+                            })
+
+                    #Solo extracción
+                    for equipo in range(1,conteo_instancias_E+1):
+                            filtro_E = f"{i}.2.{equipo} E"        
+                            columnas_E = df_trabajo.filter(like=filtro_E).columns.to_list()
+
+
+                            df_trabajo_equipo_E = df_trabajo[columnas_E]
+
+                            dic_trabajo_E = df_trabajo_equipo_E.to_dict(orient='records')[0]
+                            # Elmentos propios del equipo
+                            modelo_E = dic_trabajo_E[f"{filtro_E} | Modelo"]
+                            tipo_E = dic_trabajo_E[f"{filtro_E} | Tipo equipo/instrumento a extraer"]
+                            serial_E = dic_trabajo_E[f'{filtro_E} | N° de serie']
+                            obs_E = dic_trabajo_E[f'{filtro_E} | Observación']
+                            alcance_E = dic_trabajo_E[f'{filtro_E} | Motivo de extracción']
+
+                            datos_terreno.append({
+                                'OT': ot,
+                                'Técnico': tecnico,
+                                'Contrato': contrato,
+                                'Causa visita': causa_visita,
+                                'Proyecto': proyecto,
+                                'Asset': punto,
+                                'Tipo de trabajo': "E" ,
+                                'Fecha visita': fecha,
+                                'Cliente': cliente,
+                                'Resolución visita': resolución,
+                                'Calidad del Servicio': calidad,
+                                "PT (Permiso de trabajo)": pt,
+                                "DET (Análisis de Riesgos)": det,
+                                "Cinco Pasos para Trabajar Seguro": cinco_pasos,
+                                "Charla de 5 Minutos": charla,
+                                "Check List de Camioneta/ Somnolencia": camioneta,
+                                "AST": ast,
+                                'Observación': obs_E,
+                                'Equipo': tipo_E,
+                                'Modelo': modelo_E,
+                                'N° serie': serial_E,
+                                'Alcance': alcance_E
+                            })
+
+
+
+
                 #Tratamiento para Mantención correctiva
-                if id == "MC":
+                elif id == "MC":
                     for equipo in range(1, conteo_instancias_MC+1):
                         filtro_MC = f"{i}.2.{equipo} MC"        
                         columnas_equipo_MC = df_trabajo.filter(like=filtro_MC).columns.to_list()
@@ -397,49 +551,6 @@ def process_entrys(ordered_responses, API_key_c):
                             #'Tipo de residuo': tipo_residuo
                         })
                 
-                elif id == 'CI':
-                    for equipo in range(1, conteo_instancias_CI+1):
-                        filtro_CI = f"{i}.2.{equipo} CI"        
-                        columnas_equipo_CI = df_trabajo.filter(like=filtro_CI).columns.to_list()
-                        
-                        #df trabajo se usa para la generación del informe
-                        df_trabajo_equipo_CI = df_trabajo[columnas_equipo_CI]
-                        dic_trabajo_CI = df_trabajo_equipo_CI.to_dict(orient='records')[0]
-
-                        #Elmentos propios del equipo
-                        alcance_CI = dic_trabajo_CI[f"{i}.2.{equipo} CI | Etapa"]
-                        modelo_CI = dic_trabajo_CI[f"{i}.2.{equipo} CI | Modelo"]
-                        tipo_CI = "Sonda multiparamétrica"
-                        serial_CI = dic_trabajo_CI[f'{i}.2.{equipo} CI | N° de serie']
-                        obs_CI = dic_trabajo_CI[f'{i}.2.{equipo} CI | Observación']
-
-                        datos_terreno.append({
-                            'OT': ot,
-                            'Técnico': tecnico,
-                            'Contrato': contrato,
-                            'Causa visita': causa_visita,
-                            'Proyecto': proyecto,
-                            'Asset': punto,
-                            'Tipo de trabajo': id,
-                            'Fecha visita': fecha,
-                            'Cliente': cliente,
-                            'Resolución visita': resolución,
-                            'Calidad del Servicio': calidad,
-                            "PT (Permiso de trabajo)": pt,
-                            "DET (Análisis de Riesgos)": det,
-                            "Cinco Pasos para Trabajar Seguro": cinco_pasos,
-                            "Charla de 5 Minutos": charla,
-                            "Check List de Camioneta/ Somnolencia": camioneta,
-                            "AST": ast,
-                            'Observación': obs_CI,
-                            'Equipo': tipo_CI,
-                            'Modelo': modelo_CI,
-                            'N° serie': serial_CI,
-                            'Alcance': alcance_CI,
-                            # 'Residuo': residuo,
-                            # 'Tipo de residuo': tipo_residuo
-                        })
-                
                 elif id == "I":
                         #Iteramos sobre los tipos de mantenimientos
 
@@ -456,12 +567,15 @@ def process_entrys(ordered_responses, API_key_c):
                             df_trabajo_equipo_I = df_trabajo[columnas_equipo_I]
                             dic_trabajo_I = df_trabajo_equipo_I.to_dict(orient='records')[0]
                         #  Elmentos propios del equipo
-                            modelo_I = dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Modelo"]
-                            tipo_I = dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Tipo de {I_translate[t]}"]
-                            serial_I = dic_trabajo_I[f'{i}.2.{equipo} I ({t}) | N° de serie']
-                            operativo_I = dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | ¿Equipo operativo tras trabajos?"]
-                            obs_I = dic_trabajo_I[f'{i}.2.{equipo} I ({t}) | Observación']
-                            alcance_I = 'IH | Habilitación de equipo' if t == 'I' else dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Alcance de la intervención"]
+                        #  Usamos .get(...) porque una pregunta agregada en Connecteam DESPUÉS
+                        #  del submit no existe en las submissions viejas (la API no la rellena),
+                        #  y el tipo 'C' (Categoría) no incluye varios de estos campos por diseño.
+                            modelo_I = dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | Modelo")
+                            tipo_I = dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | Tipo de {I_translate[t]}") if t != 'C' else dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | {I_translate[t]}")
+                            serial_I = dic_trabajo_I.get(f'{i}.2.{equipo} I ({t}) | N° de serie')
+                            operativo_I = dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | ¿Equipo operativo tras trabajos?") if t != 'C' else False
+                            obs_I = dic_trabajo_I.get(f'{i}.2.{equipo} I ({t}) | Observación')
+                            alcance_I = 'IH | Habilitación de equipo' if t != 'T' else dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | Alcance de la intervención")
 
                             datos_terreno.append({
                                 'OT': ot,
@@ -696,4 +810,17 @@ def process_entrys(ordered_responses, API_key_c):
 
     else:
         print(df_final_inspeccion.columns.to_list())
+
+    # Ordenamiento por fecha descendente (más reciente primero) para que al
+    # insertar arriba en la tabla de Excel queden cronológicamente ordenados.
+    if not df_final_terreno.empty and 'Fecha visita' in df_final_terreno.columns:
+        df_final_terreno = df_final_terreno.sort_values(
+            by='Fecha visita', ascending=False, na_position='last', kind='stable'
+        ).reset_index(drop=True)
+
+    if not df_final_inspeccion.empty and 'Fecha visita ' in df_final_inspeccion.columns:
+        df_final_inspeccion = df_final_inspeccion.sort_values(
+            by='Fecha visita ', ascending=False, na_position='last', kind='stable'
+        ).reset_index(drop=True)
+
     return df_final_terreno, df_final_inspeccion
