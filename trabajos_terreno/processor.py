@@ -60,10 +60,11 @@ def process_entrys(ordered_responses, API_key_c):
         
 
 
-        I_type = ['I', 'T'] 
+        I_type = ['I', 'T', 'C'] 
         I_translate = {
                 'I': 'dispositivo',
-                'T': 'tablero'
+                'T': 'tablero',
+                'C': 'Categoría'
             }
         
         id_mantencion = {'MC': 'Mantención Correctiva',
@@ -236,9 +237,23 @@ def process_entrys(ordered_responses, API_key_c):
             
             conteo_instancias_I_T = len(I_T_prefijo)
 
+            I_C_prefijo = set()
+            for col in df_visita.columns:
+                if ' I (C) |' in col: 
+                    # Extraemos el prefijo como '1.2.1 MP' o '1.2.2 MP'
+                    prefix_end_index = col.find(' I (C) |') + 4 # Sumamos 4 para incluir ' MP'
+                    prefix = col[:prefix_end_index].strip()
+                    I_C_prefijo.add(prefix)
+            
+            conteo_instancias_I_C = len(I_C_prefijo)
+            
+            print(conteo_instancias_I_C)
+            
+
             conteo_I = {
                 'I': conteo_instancias_I_I,
-                'T': conteo_instancias_I_T
+                'T': conteo_instancias_I_T,
+                'C': conteo_instancias_I_C
             }
 
 
@@ -552,12 +567,15 @@ def process_entrys(ordered_responses, API_key_c):
                             df_trabajo_equipo_I = df_trabajo[columnas_equipo_I]
                             dic_trabajo_I = df_trabajo_equipo_I.to_dict(orient='records')[0]
                         #  Elmentos propios del equipo
-                            modelo_I = dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Modelo"]
-                            tipo_I = dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Tipo de {I_translate[t]}"]
-                            serial_I = dic_trabajo_I[f'{i}.2.{equipo} I ({t}) | N° de serie']
-                            operativo_I = dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | ¿Equipo operativo tras trabajos?"]
-                            obs_I = dic_trabajo_I[f'{i}.2.{equipo} I ({t}) | Observación']
-                            alcance_I = 'IH | Habilitación de equipo' if t == 'I' else dic_trabajo_I[f"{i}.2.{equipo} I ({t}) | Alcance de la intervención"]
+                        #  Usamos .get(...) porque una pregunta agregada en Connecteam DESPUÉS
+                        #  del submit no existe en las submissions viejas (la API no la rellena),
+                        #  y el tipo 'C' (Categoría) no incluye varios de estos campos por diseño.
+                            modelo_I = dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | Modelo")
+                            tipo_I = dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | Tipo de {I_translate[t]}") if t != 'C' else dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | {I_translate[t]}")
+                            serial_I = dic_trabajo_I.get(f'{i}.2.{equipo} I ({t}) | N° de serie')
+                            operativo_I = dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | ¿Equipo operativo tras trabajos?") if t != 'C' else False
+                            obs_I = dic_trabajo_I.get(f'{i}.2.{equipo} I ({t}) | Observación')
+                            alcance_I = 'IH | Habilitación de equipo' if t != 'T' else dic_trabajo_I.get(f"{i}.2.{equipo} I ({t}) | Alcance de la intervención")
 
                             datos_terreno.append({
                                 'OT': ot,
