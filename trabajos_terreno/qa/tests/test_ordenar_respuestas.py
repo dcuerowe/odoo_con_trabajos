@@ -51,13 +51,28 @@ def test_tc_or_04_pregunta_anidada_group(estructura_basica, make_submission):
     assert df.loc[0, "Punto anidado"] == "Valor anidado"
 
 
-def test_tc_or_05_was_hidden_se_descarta(estructura_basica, make_submission):
-    """TC-OR-05: wasHidden=True descarta la respuesta."""
+def test_tc_or_05_was_hidden_sin_dato_se_descarta(estructura_basica, make_submission):
+    """TC-OR-05: wasHidden=True sin dato real se descarta."""
     resp = {"data": {"formSubmissions": [make_submission([
-        {"questionId": "q_open", "questionType": "openEnded", "value": "oculto", "wasHidden": True},
+        {"questionId": "q_open", "questionType": "openEnded", "value": "", "wasHidden": True},
     ])]}}
     df = ordenar_respuestas(estructura_basica, resp)
     assert "Contrato" not in df.columns
+
+
+def test_tc_or_10_was_hidden_con_dato_se_conserva(estructura_basica, make_submission):
+    """TC-OR-10 (regresión OT 255): wasHidden=True con dato real se CONSERVA.
+
+    Caso: una submission editada en Connecteam para cambiar la rama condicional
+    (p.ej. I -> CF) devuelve las casillas rellenadas con wasHidden=True. El valor
+    real no debe descartarse.
+    """
+    resp = {"data": {"formSubmissions": [make_submission([
+        {"questionId": "q_open", "questionType": "openEnded",
+         "value": "Datalogger simex multicon", "wasHidden": True, "wasSubmittedEmpty": True},
+    ])]}}
+    df = ordenar_respuestas(estructura_basica, resp)
+    assert df.loc[0, "Contrato"] == "Datalogger simex multicon"
 
 
 def test_tc_or_06_submitted_empty_con_dato_se_conserva(estructura_basica, make_submission):
