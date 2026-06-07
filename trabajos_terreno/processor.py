@@ -109,10 +109,15 @@ def process_entrys(ordered_responses, API_key_c):
         for i in numeros_visita:
 
             #Separación de los trabajos realizados
-            try: 
-                tipos_realizados = [tipo.strip() for tipo in df[f'{i}.2 Tipo de trabajo a realizar'].split(',') ]
-            except:
-                tipos_realizados = df[f'{i}.2 Tipo de trabajo a realizar']
+            # OJO: df[col] es una Series de 1 fila, NO un string. Antes se hacía
+            # df[col].split(',') dentro de un try, que SIEMPRE fallaba (Series no
+            # tiene .split) y caía al except dejando la Series entera como
+            # "tipos_realizados". Al iterarla más abajo se obtenía un único elemento
+            # con todos los tipos juntos ("MC | ..., CF | ...") y split(' |')[0] se
+            # quedaba solo con el PRIMER tipo, descartando los demás (p.ej. CF).
+            # Por eso un punto con varios tipos solo generaba el registro del primero.
+            valor_tipos = df[f'{i}.2 Tipo de trabajo a realizar'].iloc[0]
+            tipos_realizados = [tipo.strip() for tipo in str(valor_tipos).split(',')]
 
             # Columnas del punto {1} | general
             columnas_visita = [columna for columna in df_columnas if columna.startswith(i)]
