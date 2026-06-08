@@ -44,6 +44,19 @@ def modify_excel_file(df, sheet_name, table_name, sharepoint_client):
             columnas_match = [c for c in columnas_df if c in header_a_columna]
             columnas_sin_match = [c for c in columnas_df if c not in header_a_columna]
 
+            # Columnas nuevas que el código sí debe crear en la tabla si faltan
+            # (p.ej. 'Informe'). El resto de las no coincidentes se siguen
+            # omitiendo con aviso, para no enmascarar errores de nombres.
+            NUEVAS_PERMITIDAS = {'Informe'}
+            nuevas = [c for c in columnas_sin_match if c in NUEVAS_PERMITIDAS]
+            for nombre_col in nuevas:
+                columna_final_num += 1
+                wh.cell(row=fila_header, column=columna_final_num, value=nombre_col)
+                header_a_columna[nombre_col] = columna_final_num
+                columnas_match.append(nombre_col)
+                print(f"[{table_name}] Columna nueva agregada a la tabla: {nombre_col!r}")
+
+            columnas_sin_match = [c for c in columnas_sin_match if c not in NUEVAS_PERMITIDAS]
             if columnas_sin_match:
                 print(
                     f"[{table_name}] Advertencia: columnas del DataFrame sin "
