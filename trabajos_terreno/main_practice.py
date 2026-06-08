@@ -14,6 +14,7 @@ from connecteam_api import all_submission, filter_submissions, form_structure
 from data_processing import ordenar_respuestas, check_new_sub
 from processor import process_entrys
 from excel_manager import send_data
+from report_manager import adjuntar_informes
 
 
 
@@ -105,6 +106,10 @@ def main():
                 print(tabulate.tabulate(data_inspeccion, headers='keys', tablefmt='grid'))
 
             try:
+                # Genera el PDF por trabajo, lo sube a SharePoint y agrega la
+                # columna 'Informe' (hipervínculo) a data_terreno.
+                data_terreno = adjuntar_informes(data_terreno, sp)
+
                 # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
                 send_data(data_terreno, 'Terreno', 'OTS', sp)
                 send_data(data_inspeccion, 'Inspección', 'Ronda', sp)

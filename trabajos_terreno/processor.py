@@ -12,6 +12,9 @@ def process_entrys(ordered_responses, API_key_c):
     
     datos_terreno = []
     datos_inspeccion = []
+    # Fotos a nivel de punto ({i}.4 Fotos recinto), indexadas por (OT, punto)
+    # para adjuntarlas luego a cada fila de data_terreno sin tocar cada dict.
+    fotos_por_caso = {}
     for i, r in ordered_responses.iterrows():
 
         r_clean = r.dropna()
@@ -355,6 +358,13 @@ def process_entrys(ordered_responses, API_key_c):
             ast = df_visita['AST'].to_list()[0]
             resolución = df_visita[f'{i}.3 Resolución de visita'].to_list()[0]
             calidad = df_visita['Calidad del Servicio'].to_list()[0]
+
+            # Fotos del recinto (nivel punto): lista de URLs o []. Se comparten
+            # entre todos los trabajos del mismo punto. Se usan para el informe PDF.
+            col_fotos = f'{i}.4 Fotos recinto'
+            val_fotos = df_visita[col_fotos].iloc[0] if col_fotos in df_visita.columns else None
+            fotos_punto = list(val_fotos) if isinstance(val_fotos, (list, tuple)) else []
+            fotos_por_caso[(ot, punto)] = fotos_punto
             #residuo = df_visita['¿Hubo retiro de residuos electrónicos o peligrosos defectuosos para gestión de correcta eliminación?'].to_list()[0]
             #tipo_residuo = df_visita['Indique el modelo y serial de los residuos retirados'].to_list()[0] if residuo == 'Sí' else None
 
@@ -783,6 +793,14 @@ def process_entrys(ordered_responses, API_key_c):
     
     # Generación de dataframe con los trabajos en terreno realizados
     df_final_terreno = pd.DataFrame(datos_terreno)
+
+    # Columna auxiliar interna con las fotos del punto (para el informe PDF).
+    # Es interna: report_manager la consume y la elimina antes de escribir a Excel.
+    if not df_final_terreno.empty:
+        df_final_terreno['_fotos'] = [
+            fotos_por_caso.get((ot, asset), [])
+            for ot, asset in zip(df_final_terreno['OT'], df_final_terreno['Asset'])
+        ]
 
     # Generación de dataframe con las visitas de inspección realizadas
 
