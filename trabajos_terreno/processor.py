@@ -828,4 +828,43 @@ def process_entrys(ordered_responses, API_key_c):
             by='Fecha visita ', ascending=False, na_position='last', kind='stable'
         ).reset_index(drop=True)
 
+    # --- Alineación con los encabezados de Excel ---
+    # La escritura en SharePoint es por NOMBRE de columna (ver excel_manager),
+    # por lo que aquí dejamos las columnas con el nombre EXACTO del encabezado
+    # de cada tabla.
+
+    # Terreno (tabla OTS): el único nombre que difiere del encabezado es la
+    # serie ('N° serie' en el dict vs 'N° de serie' en Excel).
+    if not df_final_terreno.empty:
+        df_final_terreno = df_final_terreno.rename(columns={'N° serie': 'N° de serie'})
+
+    # Inspección (tabla Ronda): las columnas vienen con los títulos crudos del
+    # formulario Connecteam; los traducimos a los encabezados de la tabla y
+    # fijamos el orden/conjunto de columnas (las que no existan quedan vacías,
+    # p.ej. 'Fotos', que se descarta aguas arriba).
+    MAPEO_INSPECCION = {
+        '#': 'OT',
+        'user': 'Técnico',
+        'fecha_envio': 'Fecha envío',
+        'Contrato': 'Contrato',
+        'Fecha visita ': 'Fecha ronda',
+        'Causa visita': 'Causa',
+        'Tipo de visita realizada': 'Tipo de trabajo',
+        '¿Hubo residuos?': 'Retiro de residuos',
+        'Nombre del Cliente': 'Cliente',
+        'Calidad del Servicio': 'Calidad del servicio',
+        'Puntos visitados': 'Puntos visitados',
+        'Resolución ronda de inspección': 'Resumen',
+    }
+    HEADERS_RONDA = [
+        'OT', 'Técnico', 'Fecha envío', 'Contrato', 'Fecha ronda', 'Causa',
+        'Tipo de trabajo', 'Retiro de residuos', 'Cliente', 'Calidad del servicio',
+        'Puntos visitados', 'Resumen', 'Fotos',
+    ]
+    if not df_final_inspeccion.empty:
+        df_final_inspeccion = (
+            df_final_inspeccion.rename(columns=MAPEO_INSPECCION)
+            .reindex(columns=HEADERS_RONDA)
+        )
+
     return df_final_terreno, df_final_inspeccion
