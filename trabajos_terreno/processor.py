@@ -254,9 +254,7 @@ def process_entrys(ordered_responses, API_key_c):
                     I_C_prefijo.add(prefix)
             
             conteo_instancias_I_C = len(I_C_prefijo)
-            
-            print(conteo_instancias_I_C)
-            
+
 
             conteo_I = {
                 'I': conteo_instancias_I_I,
@@ -390,9 +388,13 @@ def process_entrys(ordered_responses, API_key_c):
                             columnas_R_E = df_trabajo.filter(like=filtro_R_E).columns.to_list()
 
 
-                            columnas_equipo_R = columnas_general + columnas_R_E
+                            # columnas_general ya incluye las columnas "R (E)"/"R (I)",
+                            # así que concatenar columnas_R_E las repetía → DataFrame con
+                            # columnas duplicadas y UserWarning al hacer to_dict. Deduplicamos
+                            # preservando el orden.
+                            columnas_equipo_R = list(dict.fromkeys(columnas_general + columnas_R_E))
 
-                            
+
                             # df trabajo se usa para la generación del informe
                             df_trabajo_equipo_R = df_trabajo[columnas_equipo_R]
                             dic_trabajo_R = df_trabajo_equipo_R.to_dict(orient='records')[0]
