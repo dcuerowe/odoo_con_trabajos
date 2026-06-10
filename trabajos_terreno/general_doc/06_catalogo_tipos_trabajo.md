@@ -8,13 +8,13 @@ Connecteam genera columnas con una estructura jerárquica. El patrón general es
 {punto}.{sección}.{instancia} {tipo} ({subtipo}) | {campo}
 ```
 
-| Columna de ejemplo | Punto | Sección | Instancia | Tipo | Subtipo | Campo |
-| --- | --- | --- | --- | --- | --- | --- |
-| `1.1 Punto de monitoreo` | 1 | 1 | — | — | — | Punto de monitoreo |
-| `1.2 Tipo de trabajo a realizar` | 1 | 2 | — | — | — | Tipo de trabajo |
-| `1.2.1 MC \| Modelo` | 1 | 2 | 1 | MC | — | Modelo |
-| `1.2.2 MP (I) \| N° de serie` | 1 | 2 | 2 | MP | I | N° de serie |
-| `2.2.1 R (E) \| Modelo` | 2 | 2 | 1 | R | E | Modelo |
+| Columna de ejemplo                 | Punto | Sección | Instancia | Tipo | Subtipo | Campo              |
+| ---------------------------------- | ----- | -------- | --------- | ---- | ------- | ------------------ |
+| `1.1 Punto de monitoreo`         | 1     | 1        | —        | —   | —      | Punto de monitoreo |
+| `1.2 Tipo de trabajo a realizar` | 1     | 2        | —        | —   | —      | Tipo de trabajo    |
+| `1.2.1 MC \| Modelo`              | 1     | 2        | 1         | MC   | —      | Modelo             |
+| `1.2.2 MP (I) \| N° de serie`    | 1     | 2        | 2         | MP   | I       | N° de serie       |
+| `2.2.1 R (E) \| Modelo`           | 2     | 2        | 1         | R    | E       | Modelo             |
 
 El procesador detecta los puntos visitados leyendo el **primer carácter** del nombre de
 cada columna no nula. El conteo de instancias por tipo se obtiene contando los prefijos
@@ -22,26 +22,26 @@ cada columna no nula. El conteo de instancias por tipo se obtiene contando los p
 
 ## 2. Tipos de trabajo
 
-| ID | Significado | Rama en `processor.py` | Datos de equipo |
-| --- | --- | --- | --- |
-| `MC` | Mantención Correctiva | Sí | Sí |
-| `MP` | Mantención Preventiva | Sí (subtipos `T`, `I`) | Sí |
-| `I` | Instalación | Sí (subtipos `I`, `T`, `C`) | Sí |
-| `R` | Reemplazo (Extracción + Instalación) | Sí (subtipos `E`, `I`) | Sí |
-| `E` | Solo Extracción | Generada dentro de la rama `R` | Sí |
-| `CF` | Configuración / Ajustes | Sí | Sí |
-| `SO` | Solicitud de Obra | Sí | Parcial (solo Alcance y Observación) |
-| `LT` | Levantamiento Técnico | Sí | No |
-| `C` | Capacitación | Sí | No |
-| `G` | Gestión | Sí | No |
+| ID     | Significado                            | Rama en `processor.py`           | Datos de equipo                       |
+| ------ | -------------------------------------- | ---------------------------------- | ------------------------------------- |
+| `MC` | Mantención Correctiva                 | Sí                                | Sí                                   |
+| `MP` | Mantención Preventiva                 | Sí (subtipos `T`, `I`)        | Sí                                   |
+| `I`  | Instalación                           | Sí (subtipos `I`, `T`, `C`) | Sí                                   |
+| `R`  | Reemplazo (Extracción + Instalación) | Sí (subtipos `E`, `I`)        | Sí                                   |
+| `E`  | Solo Extracción                       | Generada dentro de la rama `R`   | Sí                                   |
+| `CF` | Configuración / Ajustes               | Sí                                | Sí                                   |
+| `SO` | Solicitud de Obra                      | Sí                                | Parcial (solo Alcance y Observación) |
+| `LT` | Levantamiento Técnico                 | Sí                                | No                                    |
+| `C`  | Capacitación                          | Sí                                | No                                    |
+| `G`  | Garantía                              | Sí                                | No                                    |
 
 ### Subtipos
 
-| Tipo | Subtipos | Traducción |
-| --- | --- | --- |
-| `MP` | `T`, `I` | `T`=Tablero, `I`=Dispositivo |
-| `I` | `I`, `T`, `C` | `I`=dispositivo, `T`=tablero, `C`=Categoría |
-| `R` | `E`, `I` | `E`=Extracción, `I`=Instalación |
+| Tipo   | Subtipos            | Traducción                                        |
+| ------ | ------------------- | -------------------------------------------------- |
+| `MP` | `T`, `I`        | `T`=Tablero, `I`=Dispositivo                   |
+| `I`  | `I`, `T`, `C` | `I`=dispositivo, `T`=tablero, `C`=Categoría |
+| `R`  | `E`, `I`        | `E`=Extracción, `I`=Instalación              |
 
 ## 3. Resumen por tipo de trabajo
 
@@ -80,9 +80,9 @@ El antiguo `documentacion_processor.md` (ya integrado en
 [07_processor_detalle.md](07_processor_detalle.md)) describía comportamientos que **no
 están implementados** en el código vigente. Tras la actualización quedan así documentados:
 
-| Comportamiento descrito en la versión antigua | Estado real en `processor.py` |
-| --- | --- |
-| Reclasificación automática de `R` a `CI` ("Calibración programada" / "Retorno de calibración"). | **No implementada.** `trabajo_R = t`; el `Tipo de trabajo` queda como subtipo `E`/`I`. |
-| Bloque `elif id == 'CI'` con equipo hardcoded `"Sonda multiparamétrica"`. | **No existe** rama `CI` en el código actual. |
-| `CI` como tipo de trabajo procesable. | `CI` no está en `id_tipo_de_trabajo` ni tiene rama propia; `conteo_instancias_CI` se calcula pero no se consume. |
-| Subtipo `I (C)` (Categoría) descrito brevemente. | Presente en el código (`I_type` incluye `C`), con manejo defensivo vía `.get`. |
+| Comportamiento descrito en la versión antigua                                                          | Estado real en `processor.py`                                                                                         |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Reclasificación automática de `R` a `CI` ("Calibración programada" / "Retorno de calibración"). | **No implementada.** `trabajo_R = t`; el `Tipo de trabajo` queda como subtipo `E`/`I`.                    |
+| Bloque `elif id == 'CI'` con equipo hardcoded `"Sonda multiparamétrica"`.                          | **No existe** rama `CI` en el código actual.                                                                   |
+| `CI` como tipo de trabajo procesable.                                                                 | `CI` no está en `id_tipo_de_trabajo` ni tiene rama propia; `conteo_instancias_CI` se calcula pero no se consume. |
+| Subtipo `I (C)` (Categoría) descrito brevemente.                                                     | Presente en el código (`I_type` incluye `C`), con manejo defensivo vía `.get`.                                  |
