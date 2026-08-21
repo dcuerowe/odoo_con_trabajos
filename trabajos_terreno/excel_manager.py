@@ -3,9 +3,57 @@ from datetime import date, datetime
 import openpyxl
 from openpyxl.utils.cell import coordinate_to_tuple
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from config import EXCEL_URL
 
-def modify_excel_file(df, sheet_name, table_name, sharepoint_client):
+
+def _asegurar_hoja_y_tabla(wl, sheet_name, table_name, headers):
+    """Crea la hoja y la tabla nombrada si no existen. Idempotente.
+
+    Se necesita para tablas nuevas (p.ej. 'Residuos'): sin esto,
+    `wl[sheet_name]` o `wh.tables[table_name]` lanzan KeyError, el except
+    genérico de modify_excel_file lo convierte en un print y no se escribe nada.
+
+    La tabla se registra con un objeto Table completo, de modo que openpyxl
+    derive sus `tableColumns` de la fila de encabezados y Excel no marque el
+    archivo como dañado.
+    """
+    if sheet_name in wl.sheetnames:
+        wh = wl[sheet_name]
+    else:
+        wh = wl.create_sheet(sheet_name)
+        print(f"[{table_name}] Hoja creada: {sheet_name!r}")
+
+    if table_name in wh.tables:
+        return
+
+    # La hoja puede existir sin tabla nombrada (creada a mano). Solo se escriben
+    # los encabezados si la fila 1 está vacía; si ya trae algo distinto, se
+    # aborta en vez de pisar el trabajo de alguien. El error lo captura el
+    # except de modify_excel_file, así que la corrida no escribe nada.
+    presentes = [str(c.value).strip() for c in wh[1] if c.value is not None]
+    esperados = [str(h).strip() for h in headers]
+    if presentes and presentes != esperados:
+        raise ValueError(
+            f"La hoja {sheet_name!r} ya tiene encabezados que no coinciden con "
+            f"los esperados y no existe la tabla {table_name!r}. "
+            f"Encontrados: {presentes}. Esperados: {esperados}. "
+            "Ajustalos a mano o dejá la fila 1 vacía para que el código la cree."
+        )
+    if not presentes:
+        for idx, nombre_col in enumerate(headers, start=1):
+            wh.cell(row=1, column=idx, value=nombre_col)
+
+    ref = f"A1:{get_column_letter(len(headers))}1"
+    tabla = Table(displayName=table_name, ref=ref)
+    tabla.tableStyleInfo = TableStyleInfo(
+        name="TableStyleMedium2", showRowStripes=True
+    )
+    wh.add_table(tabla)
+    print(f"[{table_name}] Tabla creada en {sheet_name!r} con ref {ref}")
+
+
+def modify_excel_file(df, sheet_name, table_name, sharepoint_client, headers_si_falta=None):
     # Descarga el archivo Excel desde SharePoint
     excel = sharepoint_client.download_file(EXCEL_URL)
     if excel:
@@ -14,6 +62,11 @@ def modify_excel_file(df, sheet_name, table_name, sharepoint_client):
             excel_file = io.BytesIO(excel)
             # Carga el archivo Excel en openpyxl
             wl = openpyxl.load_workbook(excel_file)
+
+            # Para tablas nuevas: crea hoja + tabla nombrada si aún no existen.
+            if headers_si_falta:
+                _asegurar_hoja_y_tabla(wl, sheet_name, table_name, headers_si_falta)
+
             # Selecciona la hoja de trabajo especificada
             wh = wl[sheet_name]
 
@@ -81,7 +134,15 @@ def modify_excel_file(df, sheet_name, table_name, sharepoint_client):
 
             # Escribe los nuevos datos en las filas recién insertadas, ubicando
             # cada valor en la columna de su encabezado.
-            registros = df.to_dict(orient='records')
+            # Las claves de to_dict son los nombres ORIGINALES, pero
+            # columnas_match viene de nombres ya strippeados. Sin normalizar, una
+            # columna con espacios en los extremos ('Fecha visita ') provoca
+            # KeyError, el except de abajo lo convierte en un print y se pierde
+            # el lote completo sin subir nada, con las OT ya marcadas como
+            # procesadas en form_entries.db (o sea, sin reintento).
+            registros = df.rename(
+                columns={c: str(c).strip() for c in df.columns}
+            ).to_dict(orient='records')
             for i, fila_nueva in enumerate(registros):
                 for nombre_col in columnas_match:
                     valor = fila_nueva[nombre_col]
@@ -115,8 +176,8 @@ def modify_excel_file(df, sheet_name, table_name, sharepoint_client):
     else:
         print("No se pudo descargar el archivo.")
 
-def send_data(df, sheet, table, sharepoint_client):
+def send_data(df, sheet, table, sharepoint_client, headers_si_falta=None):
     # Enviamos el DataFrame completo (con nombres de columna) para que la
     # escritura en Excel se haga por nombre y no por posición.
     if df is not None and not df.empty:
-        modify_excel_file(df, sheet, table, sharepoint_client)
+        modify_excel_file(df, sheet, table, sharepoint_client, headers_si_falta)

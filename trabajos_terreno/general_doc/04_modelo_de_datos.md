@@ -71,8 +71,10 @@ Destino: hoja `Terreno`, tabla `OTS` de `Terreno.xlsx`. Una fila por equipo inte
 Ordenamiento: descendente por `Fecha visita` (más reciente primero). Como las filas se
 insertan al inicio de la tabla, el resultado queda cronológicamente coherente en el dashboard.
 
-> El orden de las columnas de este DataFrame debe coincidir con el orden de columnas de la
-> tabla `OTS` en Excel, dado que la escritura es posicional.
+> La escritura en Excel es **por nombre de columna**, no posicional (cambió en el commit
+> `20b58ec`). Lo que debe coincidir es el *nombre* de cada columna con el encabezado de la
+> tabla `OTS`; el orden es indiferente. Una columna sin encabezado correspondiente se omite
+> con una advertencia por consola.
 
 ## 4. DataFrame de salida: `data_inspeccion`
 
@@ -91,7 +93,49 @@ Transformaciones aplicadas:
 > fijo: dependen directamente de los títulos del formulario. Cambios en esos títulos
 > impactan directamente la tabla `Ronda`.
 
-## 5. Destino en SharePoint
+## 5. DataFrame de salida: `data_residuos`
+
+Destino: hoja `Residuos`, tabla `Residuos`. Origen: la sección **"Gestión de residuos"** del
+formulario (bloque `description` con id `12dc03fc-3313-0b62-bd66-f43411c659e5`, seguido de las
+preguntas de la sección).
+
+Grano: **una fila por OT × categoría de residuo declarada**. La sección se responde una sola vez
+por OT, no por punto ni por equipo, de ahí que tenga tabla propia: incluirla en `data_terreno`
+replicaría el mismo retiro en todas las filas de la OT y produciría doble conteo al consolidar.
+La llave para cruzar con `OTS` es `OT`.
+
+Las cuatro categorías (grupos del formulario) están declaradas en `CATEGORIAS_RESIDUOS`
+(`processor.py`), y los encabezados en `HEADERS_RESIDUOS`:
+
+| Columna | Tipo | Origen / Notas |
+| --- | --- | --- |
+| `OT` | `str` | `'III-' + número de OT`. |
+| `Técnico` | `str` | Nombre resuelto vía API. |
+| `Fecha envío` | `str` | Columna `fecha_envio`. |
+| `Fecha visita` | `date` | Columna `Fecha visita ` (espacio final en el origen). |
+| `Contrato` | `str` | Columna global. |
+| `Cliente` | `str` | `Nombre del Cliente`. |
+| `Tipo de visita` | `str` | `Tipo de visita realizada`. Cubre trabajos y rondas de inspección. |
+| `Retiro de residuos` | `str` | `¿Hubo residuos?` (Sí/No). Si no es `'Sí'`, no se emite fila. |
+| `Tipos declarados` | `str` | `Indique el tipo de residuo generado` (multiselección, unida por `', '`). |
+| `Categoría` | `str \| None` | `Plásticos y electrónicos`, `Electrónicos`, `Residuos peligrosos` o `Desechos`. `None` cuando se declaró retiro sin llenar ninguna categoría. |
+| `Detalle` | `str \| None` | `Detalle de residuo` / `Indicar tipo de RAEE` / `Indicar tipo de residuo`, según categoría. |
+| `N° de serie` | `str \| None` | `Número serial`. Solo Electrónicos y Residuos peligrosos. |
+| `Falla presentada` | `str \| None` | Solo Electrónicos. |
+| `Cantidad` | `str \| None` | Texto libre (p.ej. "Bolsa chica", "1 unidad"). |
+| `Destino` | `str \| None` | Pregunta `yesNo` en el formulario, se registra como Sí/No. |
+
+> **Colisión de títulos**: los cuatro grupos repiten los títulos `Cantidad`, `Destino`,
+> `Detalle de residuo` y `Número serial`. Como `ordenar_respuestas` indexa las columnas por
+> título, antes cada grupo sobreescribía al anterior y solo sobrevivía el último. Hoy, a las
+> preguntas que viven dentro de un grupo y cuyo título se repite en el formulario se les
+> antepone el título del grupo con la convención ` | ` (`Electrónicos | Cantidad`). Las
+> preguntas de nivel raíz no se tocan.
+
+Las categorías no declaradas llegan con `wasHidden=True` y vacías, así que no generan columnas
+ni filas.
+
+## 6. Destino en SharePoint
 
 | Atributo | Valor |
 | --- | --- |
@@ -100,7 +144,27 @@ Transformaciones aplicadas:
 | Acceso | Microsoft Graph API (`EXCEL_URL` en `config.py`) |
 | Hoja / Tabla terreno | `Terreno` / `OTS` |
 | Hoja / Tabla inspección | `Inspección` / `Ronda` |
+| Hoja / Tabla residuos | `Residuos` / `Residuos` |
 
 La escritura es incremental: se insertan filas nuevas al inicio de la tabla nombrada (debajo
 del header, desplazando los datos previos) y se expande la referencia (`tabla.ref`) para
 incluirlas. No se sobrescriben filas existentes.
+
+La tabla `Residuos` la crea el propio código en la primera corrida:
+`send_data(..., headers_si_falta=HEADERS_RESIDUOS)` invoca `_asegurar_hoja_y_tabla`
+(`excel_manager.py`), que registra un objeto `Table` completo para que Excel no marque el
+archivo como dañado. La operación es idempotente. **No hay que crear nada a mano.**
+
+Estado verificado de `Terreno.xlsx` (agosto 2026):
+
+- La hoja `Residuos` **ya existe pero está vacía** (`A1:A1`, sin encabezados ni tabla
+  nombrada). `_asegurar_hoja_y_tabla` la reutiliza y le agrega los encabezados y la tabla.
+- Si la fila 1 de la hoja trajera encabezados **distintos** a `HEADERS_RESIDUOS` y no
+  existiera la tabla, la escritura se aborta con un `ValueError` explicativo en vez de pisar
+  lo que haya. La fila 1 vacía es la condición para que el código la genere.
+- La tabla `OTS` arrastra dos columnas vestigiales del enfoque abandonado, `Residuos` y
+  `Tipo de residuo` (posiciones 23-24), que quedan permanentemente vacías: el dato de
+  residuos vive en su propia tabla. Se pueden eliminar de la planilla sin afectar el
+  pipeline (la escritura es por nombre de columna).
+- El libro tiene además una hoja `Análisis MC 2026` con ~105 fórmulas de matriz. Se verificó
+  que sobreviven al round-trip de openpyxl que hace `modify_excel_file`.

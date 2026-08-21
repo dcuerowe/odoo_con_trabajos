@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime, date, timedelta, timezone
+from functools import lru_cache
 from zoneinfo import ZoneInfo
 from config import FORM_ID
 
@@ -67,6 +68,71 @@ def all_submission(API_key_connecteam):
     return response_json    
 
 
+def submissions_en_rango(API_key_connecteam, desde, hasta=None,
+                         page_size=100, max_paginas=500, verbose=True):
+    """Todas las submissions entre dos fechas, paginando hasta agotar.
+
+    `all_submission` pide `limit=100&offset=0` y no lee paginación, así que un
+    barrido histórico se queda corto en silencio. Esta función recorre las
+    páginas hasta que la API devuelve menos de `page_size` resultados.
+
+    Args:
+        desde: `datetime.date` inicial (inclusive), interpretada en hora de Chile.
+        hasta: `datetime.date` final (inclusive). Por defecto, hoy.
+
+    Returns:
+        dict con el mismo shape que `all_submission`
+        (`{'data': {'formSubmissions': [...]}}`), para poder pasarlo directo a
+        `ordenar_respuestas` sin adaptadores.
+    """
+    chile_tz = ZoneInfo("America/Santiago")
+    if hasta is None:
+        hasta = datetime.now(chile_tz).date()
+
+    inicio_utc = datetime.combine(
+        desde, datetime.min.time(), tzinfo=chile_tz).astimezone(timezone.utc)
+    # Fin = medianoche del día siguiente menos 1s, para incluir todo `hasta`.
+    fin_utc = datetime.combine(
+        hasta + timedelta(days=1), datetime.min.time(), tzinfo=chile_tz
+    ).astimezone(timezone.utc)
+    start_ts = int(inicio_utc.timestamp())
+    end_ts = int(fin_utc.timestamp()) - 1
+
+    headers = {"accept": "application/json",
+               "X-API-KEY": f"{API_key_connecteam}"}
+
+    todas = []
+    offset = 0
+    for pagina in range(max_paginas):
+        url = (
+            f"https://api.connecteam.com/forms/v1/forms/{FORM_ID}/form-submissions"
+            f"?submittingStartTimestamp={start_ts}&submittingEndTime={end_ts}"
+            f"&limit={page_size}&offset={offset}"
+        )
+        response = requests.get(url, headers=headers)
+        # A diferencia del resto del módulo, acá sí se valida el status: un 401
+        # o un 429 devolvería un dict de error que aguas abajo se ve igual que
+        # "no hay datos", y en un barrido histórico eso es indistinguible de un
+        # rango vacío.
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"Connecteam respondió {response.status_code} en offset={offset}: "
+                f"{response.text[:200]}"
+            )
+        lote = response.json().get('data', {}).get('formSubmissions', [])
+        todas.extend(lote)
+        if verbose:
+            print(f"  página {pagina + 1}: {len(lote)} submissions "
+                  f"(acumulado {len(todas)})")
+        if len(lote) < page_size:
+            break
+        offset += page_size
+    else:
+        print(f"AVISO: se alcanzó max_paginas={max_paginas}; puede faltar data.")
+
+    return {'data': {'formSubmissions': todas}}
+
+
 def form_structure(API_key_connecteam):
     """
     Obtiene la estructura de un formulario específico desde la API de Connecteam.
@@ -90,6 +156,10 @@ def form_structure(API_key_connecteam):
     response_json = response.json()
     return response_json
 
+# Memoizado: process_entrys resuelve el técnico una vez por OT, así que un
+# barrido histórico repite la misma llamada cientos de veces. El plantel no
+# cambia dentro de una corrida.
+@lru_cache(maxsize=512)
 def user(API_key_connecteam, user_id):
     """
     Obtiene el nombre completo de un usuario activo desde la API de Connecteam.

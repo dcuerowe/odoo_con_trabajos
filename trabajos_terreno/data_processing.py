@@ -12,12 +12,38 @@ def ordenar_respuestas(estructura, respuestas):
     questions = estructura.get('data', {}).get('questions', [])
     question_id_to_title = {}
 
-    def map_questions(q_list):
+    # El título de la pregunta es el nombre de columna del DataFrame, así que
+    # tiene que ser único. La sección "Gestión de residuos" rompe ese supuesto:
+    # sus cuatro grupos (Plásticos y electrónicos, Electrónicos, Residuos
+    # peligrosos, Desechos) repiten los títulos 'Cantidad', 'Destino',
+    # 'Detalle de residuo' y 'Número serial'. Al aplanar por título, cada grupo
+    # sobreescribía al anterior y solo sobrevivía el último de 'answers'.
+    # Solución: a las preguntas que viven DENTRO de un grupo y cuyo título se
+    # repite en el formulario se les antepone el título del grupo, con la misma
+    # convención ' | ' que ya usa Connecteam ('1.2.1 MC | Modelo').
+    # Las preguntas de nivel raíz no se tocan, de modo que los títulos
+    # duplicados de control ('¿Se interviene otro dispositivo?' y similares, que
+    # el pipeline ignora) conservan el nombre de columna que tenían.
+    conteo_titulos = {}
+
+    def contar_titulos(q_list):
         for q in q_list:
-            question_id_to_title[q['questionId']] = q['title']
+            titulo = q.get('title')
+            conteo_titulos[titulo] = conteo_titulos.get(titulo, 0) + 1
+            if 'questions' in q:
+                contar_titulos(q['questions'])
+
+    contar_titulos(questions)
+
+    def map_questions(q_list, titulo_grupo=None):
+        for q in q_list:
+            titulo = q['title']
+            if titulo_grupo is not None and conteo_titulos.get(titulo, 0) > 1:
+                titulo = f"{titulo_grupo} | {titulo}"
+            question_id_to_title[q['questionId']] = titulo
             # Si es un grupo, mirar adentro recursivamente
             if 'questions' in q:
-                map_questions(q['questions'])
+                map_questions(q['questions'], q['title'])
     
     map_questions(questions)
 
@@ -85,7 +111,30 @@ def ordenar_respuestas(estructura, respuestas):
         elif q_type == 'description':
             return None 
         
+        # Un questionType no contemplado se descartaba sin dejar rastro: el
+        # pipeline corría "en verde" y el campo simplemente no aparecía en el
+        # Excel. Avisamos para que un cambio de formulario sea visible.
+        print(
+            f"[ordenar_respuestas] questionType no soportado: {q_type!r} "
+            f"(questionId={answer_obj.get('questionId')}). Respuesta descartada."
+        )
         return None # Caso por defecto
+
+    def recorrer_answers(lista, fila_datos):
+        # El tipo 'group' trae una lista 'answers' directa, no 'groupAnswers'.
+        # Se recorre en profundidad: hoy los grupos del formulario son de un solo
+        # nivel, pero un grupo anidado dentro de otro llegaba a extraer_valor,
+        # caía en el caso por defecto y se descartaba junto con todos sus hijos.
+        for answer in lista:
+            if answer.get('questionType') == 'group' and 'answers' in answer:
+                recorrer_answers(answer['answers'], fila_datos)
+                continue
+
+            q_id = answer.get('questionId')
+            titulo = question_id_to_title.get(q_id, f"Pregunta {q_id}")
+            val = extraer_valor(answer)
+            if val is not None:
+                fila_datos[titulo] = val
 
     # --- 3. Procesamiento de Submissions ---
     lista_registros = []
@@ -105,30 +154,8 @@ def ordenar_respuestas(estructura, respuestas):
             'fecha_envio': fecha_envio_str
         }
 
-        # Iterar sobre las respuestas principales
-        for answer in submission.get('answers', []):
-            q_type = answer.get('questionType')
-            q_id = answer.get('questionId')
-            
-            # --- CASO GROUP (NUEVO) ---
-            # El tipo 'group' contiene una lista 'answers' directa, no 'groupAnswers'
-            if q_type == 'group' and 'answers' in answer:
-                # Iteramos sobre las respuestas DENTRO del grupo
-                for ans_anidada in answer['answers']:
-                    sub_id = ans_anidada.get('questionId')
-                    # Buscamos el título usando el ID (que ya mapeamos recursivamente)
-                    titulo = question_id_to_title.get(sub_id, f"Pregunta {sub_id}")
-                    
-                    val = extraer_valor(ans_anidada)
-                    if val is not None:
-                        fila_datos[titulo] = val
-            
-            # --- CASO PREGUNTA NORMAL ---
-            else:
-                titulo = question_id_to_title.get(q_id, f"Pregunta {q_id}")
-                val = extraer_valor(answer)
-                if val is not None:
-                    fila_datos[titulo] = val
+        # Iterar sobre las respuestas principales (baja a los grupos anidados)
+        recorrer_answers(submission.get('answers', []), fila_datos)
 
         lista_registros.append(fila_datos)
 

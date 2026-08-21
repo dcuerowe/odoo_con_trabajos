@@ -12,7 +12,7 @@ from config import (
 from sharepoint_client import Sharepoint
 from connecteam_api import all_submission, filter_submissions, form_structure
 from data_processing import ordenar_respuestas, check_new_sub
-from processor import process_entrys
+from processor import process_entrys, HEADERS_RESIDUOS
 from excel_manager import send_data
 from report_manager import adjuntar_informes
 
@@ -95,7 +95,7 @@ def main():
 
             sublista = pd.DataFrame(filas_filtradas)
 
-            data_terreno, data_inspeccion = process_entrys(sublista, CONNECTEAM_API_KEY) #sp al final del argumento
+            data_terreno, data_inspeccion, data_residuos = process_entrys(sublista, CONNECTEAM_API_KEY) #sp al final del argumento
 
             print(f"\nTrabajos en terreno (data_terreno): {len(data_terreno)} fila(s)")
             if not data_terreno.empty:
@@ -105,14 +105,34 @@ def main():
             if not data_inspeccion.empty:
                 print(tabulate.tabulate(data_inspeccion, headers='keys', tablefmt='grid'))
 
-            try:
-                # Genera el PDF por trabajo, lo sube a SharePoint y agrega la
-                # columna 'Informe' (hipervínculo) a data_terreno.
-                data_terreno = adjuntar_informes(data_terreno, sp)
+            print(f"\nGestión de residuos (data_residuos): {len(data_residuos)} fila(s)")
+            if not data_residuos.empty:
+                print(tabulate.tabulate(data_residuos, headers='keys', tablefmt='grid'))
 
-                # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
-                send_data(data_terreno, 'Terreno', 'OTS', sp)
-                send_data(data_inspeccion, 'Inspección', 'Ronda', sp)
+            # Este modo NO consulta check_new_sub, así que reenviar todo duplica
+            # filas en Excel. Para rellenar el gap histórico de residuos hay que
+            # poder escribir SOLO esa tabla.
+            print('\n¿Qué tablas enviar a SharePoint?')
+            print('(1) Todas (Terreno + Inspección + Residuos)')
+            print('(2) Solo Residuos')
+            print('(3) No enviar nada')
+            destino = input('\nIndique un código: ').strip()
+            if destino not in ('1', '2'):
+                print('No se envió nada a SharePoint.')
+                continue
+
+            try:
+                if destino == '1':
+                    # Genera el PDF por trabajo, lo sube a SharePoint y agrega la
+                    # columna 'Informe' (hipervínculo) a data_terreno.
+                    data_terreno = adjuntar_informes(data_terreno, sp)
+
+                    # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
+                    send_data(data_terreno, 'Terreno', 'OTS', sp)
+                    send_data(data_inspeccion, 'Inspección', 'Ronda', sp)
+
+                send_data(data_residuos, 'Residuos', 'Residuos', sp,
+                          headers_si_falta=HEADERS_RESIDUOS)
 
 
             except Exception as e:
