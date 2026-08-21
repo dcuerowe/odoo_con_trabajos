@@ -132,3 +132,28 @@ def fila_inspeccion():
         "Puntos visitados": "Punto A, Punto B, Punto C",
         "Fotos ": "url1, url2",
     }
+
+
+@pytest.fixture
+def fila_mc_con_residuos(fila_mc):
+    """MC con la sección 'Gestión de residuos' respondida en dos categorías.
+
+    Los títulos llevan el prefijo del grupo porque colisionan entre categorías;
+    ver la desambiguación en `data_processing.ordenar_respuestas`.
+    """
+    fila = dict(fila_mc)
+    fila.update({
+        "¿Hubo residuos?": "Sí",
+        "Indique el tipo de residuo generado": (
+            "Plástico y eléctricos (Ej: Cables, fuentes, etc), "
+            "Residuos peligrosos (Ej: Baterías)"
+        ),
+        "Plásticos y electrónicos | Detalle de residuo": "Cables UTP",
+        "Plásticos y electrónicos | Cantidad": "Bolsa chica",
+        "Plásticos y electrónicos | Destino": "Sí",
+        "Residuos peligrosos | Indicar tipo de residuo": "Batería de respaldo",
+        "Residuos peligrosos | Número serial": "BAT-77",
+        "Residuos peligrosos | Cantidad": "1 unidad",
+        "Residuos peligrosos | Destino": "Sí",
+    })
+    return fila

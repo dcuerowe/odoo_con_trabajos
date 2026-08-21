@@ -12,7 +12,7 @@ from config import (
 from sharepoint_client import Sharepoint
 from connecteam_api import all_submission, filter_submissions, form_structure
 from data_processing import ordenar_respuestas, check_new_sub
-from processor import process_entrys
+from processor import process_entrys, HEADERS_RESIDUOS
 from excel_manager import send_data
 from report_manager import adjuntar_informes
 
@@ -42,7 +42,7 @@ def job():
             print(f"Se encontraron {len(nuevas_entradas)} nuevas entradas. Procesando...")
 
             # Procesa las nuevas entradas encontradas
-            data_terreno, data_inspeccion = process_entrys(nuevas_entradas, CONNECTEAM_API_KEY) #sp al final del argumento
+            data_terreno, data_inspeccion, data_residuos = process_entrys(nuevas_entradas, CONNECTEAM_API_KEY) #sp al final del argumento
 
             print(tabulate.tabulate(data_inspeccion, headers='keys', tablefmt='grid'))
 
@@ -54,6 +54,10 @@ def job():
                 # Envía los datos filtrados a SharePoint, actualizando los archivos correspondientes
                 send_data(data_terreno, 'Terreno', 'OTS', sp)
                 send_data(data_inspeccion, 'Inspección', 'Ronda', sp)
+                # Gestión de residuos: tabla propia, a nivel de OT. Se pasan los
+                # encabezados para que la hoja/tabla se cree en la primera corrida.
+                send_data(data_residuos, 'Residuos', 'Residuos', sp,
+                          headers_si_falta=HEADERS_RESIDUOS)
 
 
             except Exception as e:

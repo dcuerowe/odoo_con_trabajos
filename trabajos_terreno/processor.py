@@ -8,10 +8,112 @@ from connecteam_api import user
 
 
 
+# --- Sección "Gestión de residuos" del formulario ---
+# Se responde UNA vez por OT (no por punto ni por equipo), así que se extrae a
+# nivel de OT y va a su propia tabla. Meterla en data_terreno replicaría el
+# mismo retiro en todas las filas de la OT y produciría doble conteo al
+# consolidar el reporte trimestral.
+#
+# Los cuatro grupos repiten títulos entre sí ('Cantidad', 'Destino',
+# 'Detalle de residuo', 'Número serial'), por lo que ordenar_respuestas les
+# antepone el título del grupo con la convención ' | '. De ahí el prefijo por
+# categoría al leer las columnas.
+CATEGORIAS_RESIDUOS = [
+    ('Plásticos y electrónicos', {
+        'Detalle': 'Detalle de residuo',
+        'Cantidad': 'Cantidad',
+        'Destino': 'Destino',
+    }),
+    ('Electrónicos', {
+        'Detalle': 'Indicar tipo de RAEE',
+        'N° de serie': 'Número serial',
+        'Falla presentada': 'Falla presentada',
+        'Cantidad': 'Cantidad',
+        'Destino': 'Destino',
+    }),
+    ('Residuos peligrosos', {
+        'Detalle': 'Indicar tipo de residuo',
+        'N° de serie': 'Número serial',
+        'Cantidad': 'Cantidad',
+        'Destino': 'Destino',
+    }),
+    ('Desechos', {
+        'Detalle': 'Detalle de residuo',
+        'Cantidad': 'Cantidad',
+        'Destino': 'Destino',
+    }),
+]
+
+# Encabezados de la tabla 'Residuos' (hoja 'Residuos' de Terreno.xlsx), en
+# orden. Sin espacios en los extremos: excel_manager compara los nombres ya
+# strippeados pero lee el dato con la clave original del DataFrame.
+HEADERS_RESIDUOS = [
+    'OT', 'Técnico', 'Fecha envío', 'Fecha visita', 'Contrato', 'Cliente',
+    'Tipo de visita', 'Retiro de residuos', 'Tipos declarados', 'Categoría',
+    'Detalle', 'N° de serie', 'Falla presentada', 'Cantidad', 'Destino',
+]
+
+
+def extraer_residuos(df):
+    """Una fila por categoría de residuo con datos en la OT.
+
+    `df` es el DataFrame de una sola fila de la OT (ya con el nombre del técnico
+    resuelto en la columna 'user'). Devuelve [] si no hubo retiro.
+    """
+    fila = df.iloc[0]
+
+    def valor(columna):
+        # Aguas arriba se hace dropna(), así que una pregunta sin responder no
+        # genera columna. Se usa acceso tolerante porque hay submissions
+        # anteriores a la sección de residuos.
+        if columna not in df.columns:
+            return None
+        v = fila[columna]
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
+
+    if valor('¿Hubo residuos?') != 'Sí':
+        return []
+
+    contexto = {
+        'OT': 'III-' + str(valor('#')),
+        # str() porque si falló la resolución del nombre, 'user' sigue siendo el id.
+        'Técnico': str(valor('user') or '').strip() or None,
+        'Fecha envío': valor('fecha_envio'),
+        'Fecha visita': valor('Fecha visita '),
+        'Contrato': valor('Contrato'),
+        'Cliente': valor('Nombre del Cliente'),
+        'Tipo de visita': valor('Tipo de visita realizada'),
+        'Retiro de residuos': valor('¿Hubo residuos?'),
+        'Tipos declarados': valor('Indique el tipo de residuo generado'),
+    }
+
+    registros = []
+    for categoria, preguntas in CATEGORIAS_RESIDUOS:
+        datos = {
+            encabezado: valor(f'{categoria} | {pregunta}')
+            for encabezado, pregunta in preguntas.items()
+        }
+        # Las categorías no declaradas llegan con wasHidden=True y vacías, así
+        # que ordenar_respuestas no crea sus columnas y todo queda en None.
+        if all(v is None for v in datos.values()):
+            continue
+        registros.append({**contexto, 'Categoría': categoria, **datos})
+
+    if not registros:
+        # Marcó que hubo residuos pero no llenó ninguna categoría: se registra
+        # igual para que el gap sea visible en el reporte, no silencioso.
+        registros.append({**contexto, 'Categoría': None})
+
+    return registros
+
+
 def process_entrys(ordered_responses, API_key_c):
     
     datos_terreno = []
     datos_inspeccion = []
+    datos_residuos = []
     # Fotos a nivel de punto ({i}.4 Fotos recinto), indexadas por (OT, punto)
     # para adjuntarlas luego a cada fila de data_terreno sin tocar cada dict.
     fotos_por_caso = {}
@@ -39,6 +141,10 @@ def process_entrys(ordered_responses, API_key_c):
             print(f"Error al asignar el nombre del usuario al DataFrame: {e}")
             traceback.print_exc()
 
+
+        # Residuos: nivel OT, antes de bifurcar, para cubrir con un solo punto
+        # de inserción tanto los trabajos como las rondas de inspección.
+        datos_residuos.extend(extraer_residuos(df))
 
         # Agrupación para las visitas de inspección
         if df['Tipo de visita realizada'].item() == '(R) Ronda diaria de Inspección':
@@ -887,4 +993,10 @@ def process_entrys(ordered_responses, API_key_c):
             .reindex(columns=HEADERS_RONDA)
         )
 
-    return df_final_terreno, df_final_inspeccion
+    # Residuos (tabla Residuos): los dicts ya se construyen con los nombres de
+    # encabezado, solo se fija el orden y el conjunto de columnas.
+    df_final_residuos = pd.DataFrame(datos_residuos)
+    if not df_final_residuos.empty:
+        df_final_residuos = df_final_residuos.reindex(columns=HEADERS_RESIDUOS)
+
+    return df_final_terreno, df_final_inspeccion, df_final_residuos

@@ -9,3 +9,6 @@ CLAUDE.md
 .claude
 .json
 .vscode
+
+# Volcados de la API con datos de clientes (no versionar)
+trabajos_terreno/helpers/
