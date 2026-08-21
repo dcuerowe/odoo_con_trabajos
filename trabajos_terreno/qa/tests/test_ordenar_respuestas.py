@@ -233,3 +233,72 @@ def test_tc_or_13_tipo_desconocido_se_descarta_con_aviso(
     df = ordenar_respuestas(estructura_basica, resp)
     assert "Contrato" not in df.columns
     assert "questionType no soportado" in capsys.readouterr().out
+
+
+def test_tc_or_14_yesno_con_etiquetas_propias(make_submission):
+    """TC-OR-14: un yesNo con allAnswers propios devuelve su etiqueta, no Sí/No.
+
+    Las 4 preguntas 'Destino' de la sección de residuos son
+    ('Cliente', 'Casa We'); leerlas como Sí/No registraba un valor que no
+    existe en el formulario.
+    """
+    estructura = {
+        "data": {
+            "questions": [
+                {
+                    "questionId": "g_res",
+                    "title": "Desechos",
+                    "questions": [
+                        {
+                            "questionId": "q_destino",
+                            "title": "Destino",
+                            "questionType": "yesNo",
+                            "allAnswers": [
+                                {"yesNoOptionId": 0, "text": "Cliente"},
+                                {"yesNoOptionId": 1, "text": "Casa We"},
+                            ],
+                        },
+                        {
+                            "questionId": "q_normal",
+                            "title": "Operativo",
+                            "questionType": "yesNo",
+                            "allAnswers": [
+                                {"yesNoOptionId": 0, "text": "Sí"},
+                                {"yesNoOptionId": 1, "text": "No"},
+                            ],
+                        },
+                    ],
+                },
+            ]
+        }
+    }
+    resp = {"data": {"formSubmissions": [make_submission([
+        {"questionId": "g_res", "questionType": "group", "answers": [
+            {"questionId": "q_destino", "questionType": "yesNo", "selectedIndex": 1},
+            {"questionId": "q_normal", "questionType": "yesNo", "selectedIndex": 0},
+        ]},
+    ])]}}
+    df = ordenar_respuestas(estructura, resp)
+    assert df.loc[0, "Destino"] == "Casa We"
+    assert df.loc[0, "Operativo"] == "Sí"
+
+
+def test_tc_or_15_yesno_sin_allanswers_cae_en_si_no(estructura_basica, make_submission):
+    """TC-OR-15: sin allAnswers en la estructura se conserva el fallback Sí/No."""
+    resp = {"data": {"formSubmissions": [make_submission([
+        {"questionId": "q_yesno", "questionType": "yesNo", "selectedIndex": 0},
+    ])]}}
+    df = ordenar_respuestas(estructura_basica, resp)
+    assert df.loc[0, "Operativo"] == "Sí"
+
+
+def test_tc_or_16_yesno_sin_respuesta_no_crea_columna(estructura_basica, make_submission):
+    """TC-OR-16: un yesNo sin selectedIndex se descarta en vez de escribir el
+    string 'None' en la celda."""
+    resp = {"data": {"formSubmissions": [make_submission([
+        {"questionId": "q_yesno", "questionType": "yesNo"},
+        {"questionId": "q_open", "questionType": "openEnded", "value": "C-001"},
+    ])]}}
+    df = ordenar_respuestas(estructura_basica, resp)
+    assert "Operativo" not in df.columns
+    assert df.loc[0, "Contrato"] == "C-001"

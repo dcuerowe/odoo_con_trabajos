@@ -123,7 +123,7 @@ Las cuatro categorías (grupos del formulario) están declaradas en `CATEGORIAS_
 | `N° de serie` | `str \| None` | `Número serial`. Solo Electrónicos y Residuos peligrosos. |
 | `Falla presentada` | `str \| None` | Solo Electrónicos. |
 | `Cantidad` | `str \| None` | Texto libre (p.ej. "Bolsa chica", "1 unidad"). |
-| `Destino` | `str \| None` | Pregunta `yesNo` en el formulario, se registra como Sí/No. |
+| `Destino` | `str \| None` | `Cliente` o `Casa We`. Es una pregunta `yesNo` con etiquetas propias en `allAnswers`; el valor se resuelve contra la estructura del formulario, no como Sí/No. |
 
 > **Colisión de títulos**: los cuatro grupos repiten los títulos `Cantidad`, `Destino`,
 > `Detalle de residuo` y `Número serial`. Como `ordenar_respuestas` indexa las columnas por

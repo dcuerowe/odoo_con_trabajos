@@ -24,6 +24,12 @@ def ordenar_respuestas(estructura, respuestas):
     # Las preguntas de nivel raíz no se tocan, de modo que los títulos
     # duplicados de control ('¿Se interviene otro dispositivo?' y similares, que
     # el pipeline ignora) conservan el nombre de columna que tenían.
+    # Las preguntas yesNo pueden traer etiquetas propias: en este formulario 179
+    # usan ('Sí','No') pero las 4 'Destino' de la sección de residuos usan
+    # ('Cliente','Casa We'). Se mapean por questionId para resolver el valor
+    # contra el formulario en vez de asumir Sí/No.
+    question_id_to_yesno = {}
+
     conteo_titulos = {}
 
     def contar_titulos(q_list):
@@ -41,6 +47,14 @@ def ordenar_respuestas(estructura, respuestas):
             if titulo_grupo is not None and conteo_titulos.get(titulo, 0) > 1:
                 titulo = f"{titulo_grupo} | {titulo}"
             question_id_to_title[q['questionId']] = titulo
+            if q.get('questionType') == 'yesNo':
+                etiquetas = {
+                    a.get('yesNoOptionId'): a.get('text')
+                    for a in (q.get('allAnswers') or [])
+                    if a.get('text') is not None
+                }
+                if etiquetas:
+                    question_id_to_yesno[q['questionId']] = etiquetas
             # Si es un grupo, mirar adentro recursivamente
             if 'questions' in q:
                 map_questions(q['questions'], q['title'])
@@ -83,11 +97,20 @@ def ordenar_respuestas(estructura, respuestas):
             selected = [opt['text'] for opt in answer_obj.get('selectedAnswers', [])]
             return ', '.join(selected) if selected else ''
         elif q_type == 'yesNo':
-             # Ajuste para que '0' sea 'Sí' y '1' sea 'No' según tu historial, o el texto si existe
-             idx = answer_obj.get('selectedIndex')
-             if idx == 0: return "Sí"
-             if idx == 1: return "No"
-             return str(idx)
+            # La etiqueta sale de la estructura del formulario, que es la fuente
+            # de verdad: un yesNo puede no ser Sí/No. Las 4 preguntas 'Destino'
+            # de la sección de residuos son ('Cliente', 'Casa We'), y leerlas
+            # como Sí/No registraba un valor que no existe en el formulario.
+            # El fallback Sí/No cubre estructuras sin allAnswers.
+            idx = answer_obj.get('selectedIndex')
+            if idx is None:
+                return None
+            etiquetas = question_id_to_yesno.get(answer_obj.get('questionId'))
+            if etiquetas and idx in etiquetas:
+                return etiquetas[idx]
+            if idx == 0: return "Sí"
+            if idx == 1: return "No"
+            return str(idx)
         elif q_type == 'datetime':
             ts = answer_obj.get('timestamp')
             if ts:
