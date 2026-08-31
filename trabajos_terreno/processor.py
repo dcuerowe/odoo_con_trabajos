@@ -937,7 +937,7 @@ def process_entrys(ordered_responses, API_key_c):
                 filas_expandidas.append(fila)
 
         df_final_inspeccion = pd.DataFrame(filas_expandidas).reset_index(drop=True)
-        df_final_inspeccion = df_final_inspeccion.drop(columns=['Fotos '])
+        df_final_inspeccion = df_final_inspeccion.drop(columns=['Fotos '], errors='ignore')
 
     else:
         print(df_final_inspeccion.columns.to_list())
