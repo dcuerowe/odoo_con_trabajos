@@ -44,7 +44,6 @@ def job():
             # Procesa las nuevas entradas encontradas
             data_terreno, data_inspeccion, data_residuos = process_entrys(nuevas_entradas, CONNECTEAM_API_KEY) #sp al final del argumento
 
-            print(tabulate.tabulate(data_inspeccion, headers='keys', tablefmt='grid'))
 
             try:
                 # Genera el PDF por trabajo, lo sube a SharePoint y agrega la
