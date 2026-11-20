@@ -7,6 +7,7 @@ una columna `Informe` con un hipervínculo clickeable al PDF. Devuelve el DataFr
 listo para `excel_manager.send_data` (sin la columna auxiliar `_fotos`).
 """
 
+import gc
 import re
 import unicodedata
 from datetime import date, datetime
@@ -89,6 +90,11 @@ def adjuntar_informes(df_terreno, sharepoint_client):
             web_url = sharepoint_client.upload_file(url_subida, pdf, content_type="pdf")
         except Exception as e:
             print(f"Error al generar/subir informe de {ot} · {asset} · {tipo}: {e}")
+        finally:
+            # ReportLab deja ciclos de referencias que retienen las imágenes;
+            # sin recolectar, la memoria se acumula PDF tras PDF.
+            pdf = None
+            gc.collect()
 
         if web_url:
             # Fórmula HYPERLINK: openpyxl la escribe como fórmula (link clickeable).

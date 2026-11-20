@@ -99,7 +99,10 @@ def main():
 
             print(f"\nTrabajos en terreno (data_terreno): {len(data_terreno)} fila(s)")
             if not data_terreno.empty:
-                print(tabulate.tabulate(data_terreno, headers='keys', tablefmt='grid'))
+                # '_fotos' (lista de URLs) es auxiliar para los PDFs; imprimirla
+                # inunda la terminal (~3 MB en la OT 509).
+                print(tabulate.tabulate(data_terreno.drop(columns=['_fotos'], errors='ignore'),
+                                        headers='keys', tablefmt='grid'))
 
             print(f"\nRondas de inspección (data_inspeccion): {len(data_inspeccion)} fila(s)")
             if not data_inspeccion.empty:

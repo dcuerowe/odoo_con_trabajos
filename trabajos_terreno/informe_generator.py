@@ -24,6 +24,7 @@ import requests
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from reportlab import rl_config
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.lib import colors
@@ -40,6 +41,17 @@ from reportlab.lib.utils import ImageReader
 from PIL import Image as PILImage, ImageOps
 
 from config import LOGO_URL
+
+# Sin ASCII85 las imágenes se embeben en binario: PDF ~25% más liviano y se
+# evita el codificador en Python puro de ReportLab (muy costoso en memoria
+# cuando no está disponible su extensión C, p.ej. en Python 3.14).
+rl_config.useA85 = 0
+
+# Las fotos de celular llegan a 12 MP; a ancho de página A4 no se nota la
+# diferencia sobre ~1600 px. Embeberlas a resolución completa hizo que la
+# OT 509 (106 fotos) generara PDFs de 46 MB y agotara la memoria.
+FOTO_MAX_PX = 1600
+FOTO_CALIDAD = 80
 
 
 # ----------------------------------------------------------------------
@@ -449,8 +461,9 @@ def _descargar_fotos(urls, punto):
                 pil_img = ImageOps.exif_transpose(pil_img)
                 if pil_img.mode not in ("RGB", "L"):
                     pil_img = pil_img.convert("RGB")
+                pil_img.thumbnail((FOTO_MAX_PX, FOTO_MAX_PX), PILImage.LANCZOS)
                 norm = io.BytesIO()
-                pil_img.save(norm, format="JPEG", quality=88)
+                pil_img.save(norm, format="JPEG", quality=FOTO_CALIDAD)
             norm.seek(0)
             idx += 1
             fotos.append({
